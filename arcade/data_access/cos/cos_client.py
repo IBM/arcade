@@ -1,7 +1,8 @@
 import os
-import ibm_boto3 # type: ignore
-from ibm_botocore.client import Config # type: ignore
-from ibm_boto3.resources.base import ServiceResource # type: ignore
+import ibm_boto3  # type: ignore
+from ibm_botocore.client import Config  # type: ignore
+from ibm_boto3.resources.base import ServiceResource  # type: ignore
+
 
 def build_cos_client() -> ServiceResource:
     cos_endpoint = os.environ.get('COS_ENDPOINT')
@@ -13,4 +14,3 @@ def build_cos_client() -> ServiceResource:
                                     config=Config(signature_version='oauth'),
                                     endpoint_url=cos_endpoint)
     return cos_client
-

@@ -1,12 +1,10 @@
 import io
-import re
 import gzip
-import logging
 import tarfile
 from dataclasses import dataclass
-from collections import defaultdict
 from typing import List, Optional, Dict, Any, Sequence, IO
-from ibm_boto3.resources.base import ServiceResource # type: ignore
+from ibm_boto3.resources.base import ServiceResource  # type: ignore
+
 
 @dataclass
 class EphemerisLine:
@@ -56,20 +54,20 @@ class COSOEMData:
             ephemeris_lines: List[EphemerisLine] = []
             raw_data: Dict['str', Any] = dict()
             section = 'header'
-            for line in gz_file:
-                l = line.decode('utf-8')
+            for raw_line in gz_file:
+                line = raw_line.decode('utf-8')
                 # Skip blank or comment lines
-                if len(l) == 0 or l.startswith('COMMENT'):
+                if len(line) == 0 or line.startswith('COMMENT'):
                     continue
-                elif '=' in l:
-                    k, v = [s.strip() for s in l.split('=')]
+                elif '=' in line:
+                    k, v = [s.strip() for s in line.split('=')]
                     raw_data[k.lower()] = v
-                elif l.startswith('META_START'):
+                elif line.startswith('META_START'):
                     section = 'meta'
-                elif l.startswith('META_STOP'):
+                elif line.startswith('META_STOP'):
                     section = 'ephemeris'
                 elif section == 'ephemeris':
-                    line_data = l.split(' ')
+                    line_data = line.split(' ')
                     epoch = line_data[0]
                     state_vector = [float(s) for s in line_data[1:]]
                     ephemeris_line = EphemerisLine(epoch, state_vector)
@@ -82,18 +80,21 @@ class COSOEMData:
         oem_data = OEMData(**raw_data)
         return oem_data
 
-    def _get_file_names_to_fetch(self, aso_ids: Sequence[str] = []) -> List[str]:
+    def _get_file_names_to_fetch(self, aso_ids:
+                                 Sequence[str] = []) -> List[str]:
         if aso_ids:
             block_ids = {aso_id[:2] for aso_id in aso_ids}
             file_names_to_fetch = [f'{self.oem_date}_block_{block_id}.tar'
-                                  for block_id in block_ids]
+                                   for block_id in block_ids]
         else:
             all_oem_files = self._get_oem_file_names()
             file_names_to_fetch = [f for f in all_oem_files
                                    if f.startswith(self.oem_date)]
         return file_names_to_fetch
 
-    def _get_gz_file_names(self, tar_file: tarfile.TarFile, aso_ids: Sequence[str]) -> Sequence[str]:
+    def _get_gz_file_names(self,
+                           tar_file: tarfile.TarFile,
+                           aso_ids: Sequence[str]) -> Sequence[str]:
         member_names = [m.name for m in tar_file.getmembers()]
         gz_file_names = [m for m in member_names
                          if m.endswith('.gz')]
@@ -104,13 +105,15 @@ class COSOEMData:
                     if aso_id in gz_file_name:
                         results.append(gz_file_name)
         else:
-            resutls = gz_file_names
+            results = gz_file_names
         return results
 
     def _get_aso_id_from_file_name(self, filename: str) -> str:
         return filename.split('/')[-1].split('.')[0]
 
-    def _extract_oem_tar_file(self, tar_file_obj: IO[bytes], aso_ids: Sequence[str]) -> None:
+    def _extract_oem_tar_file(self,
+                              tar_file_obj: IO[bytes],
+                              aso_ids: Sequence[str]) -> None:
         with tarfile.open(fileobj=tar_file_obj) as tar_file:
             gz_file_names = self._get_gz_file_names(tar_file, aso_ids)
             for gz_file_name in gz_file_names:
@@ -121,7 +124,8 @@ class COSOEMData:
                     self.oem_data[aso_id] = oem_data
 
     def _fetch_tar_file(self, tar_file_name: str) -> IO[bytes]:
-        tar_cos_ref = self.cos_client.Object(self.cos_bucket, tar_file_name).get()
+        tar_cos_ref = self.cos_client.Object(self.cos_bucket,
+                                             tar_file_name).get()
         tar_bytes = tar_cos_ref['Body'].read()
         tar_file_obj = io.BytesIO(tar_bytes)
         return tar_file_obj

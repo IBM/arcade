@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-.PHONY : build clean type_check
+.PHONY : build clean test type_check
 
 build:
 	docker build -t arcade:latest .
@@ -23,3 +23,6 @@ clean:
 
 type_check: build
 	docker run arcade mypy --strict /app
+
+test: build type_check
+	docker run arcade python3 -m pytest --cache-clear --flake8
