@@ -1,0 +1,5 @@
+ibm-cos-sdk>=2.9.0
+mypy>=0.790
+orbdetpy>=2.0.4
+pytest
+pytest-flake8
