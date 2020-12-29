@@ -22,7 +22,7 @@ clean:
 	docker rmi -f arcade:latest
 
 type_check: build
-	docker run arcade mypy --strict /app
+	docker run arcade mypy --strict /arcade
 
 test: build type_check
 	docker run arcade python3 -m pytest --cache-clear --flake8

@@ -16,11 +16,11 @@
 FROM python:3.8-slim-buster
 
 # We copy just the requirements.txt first to leverage Docker cache
-COPY ./requirements.txt /app/arcade/requirements.txt
-RUN chmod -R g=u /app
-WORKDIR /app/arcade
+COPY ./requirements.txt /arcade/requirements.txt
+RUN chmod -R g=u /arcade
+WORKDIR /arcade
 
 RUN pip install --upgrade pip wheel
 RUN pip install -r requirements.txt
 
-COPY . /app
+COPY . /arcade
