@@ -1,9 +1,8 @@
-import io
 import gzip
 import tarfile
 from dataclasses import dataclass
+from arcade.data_access.cos import Bucket
 from typing import List, Optional, Dict, Any, Sequence, IO
-from ibm_boto3.resources.base import ServiceResource  # type: ignore
 
 
 @dataclass
@@ -28,19 +27,13 @@ class OEMData:
 
 
 class COSOEMData:
-    def __init__(self, cos_client: ServiceResource, cos_bucket: str) -> None:
-        self.cos_client = cos_client
-        self.cos_bucket = cos_bucket
-        self.oem_date = self._get_latest_date()
+    def __init__(self, oem_bucket: Bucket) -> None:
+        self.oem_bucket = oem_bucket
+        self.date = self._get_latest_date()
         self.oem_data: Dict[str, OEMData] = dict()
 
-    def _get_oem_file_names(self) -> List[str]:
-        oem_bucket = self.cos_client.Bucket(self.cos_bucket)
-        oem_files = oem_bucket.objects.all()
-        return [f.key for f in oem_files]
-
     def _get_latest_date(self) -> str:
-        oem_file_names = self._get_oem_file_names()
+        oem_file_names = self.oem_bucket.list_file_names()
         dates = {f.split('_')[0] for f in oem_file_names}
         sorted_dates = sorted(dates, reverse=True)
         try:
@@ -49,7 +42,7 @@ class COSOEMData:
         except IndexError:
             return ''
 
-    def parse_oem_data(self, gz_file_obj: IO[bytes]) -> OEMData:
+    def _parse_oem_data(self, gz_file_obj: IO[bytes]) -> OEMData:
         with gzip.open(gz_file_obj, 'r') as gz_file:
             ephemeris_lines: List[EphemerisLine] = []
             raw_data: Dict['str', Any] = dict()
@@ -84,12 +77,12 @@ class COSOEMData:
                                  Sequence[str] = []) -> List[str]:
         if aso_ids:
             block_ids = {aso_id[:2] for aso_id in aso_ids}
-            file_names_to_fetch = [f'{self.oem_date}_block_{block_id}.tar'
+            file_names_to_fetch = [f'{self.date}_block_{block_id}.tar'
                                    for block_id in block_ids]
         else:
-            all_oem_files = self._get_oem_file_names()
+            all_oem_files = self.oem_bucket.list_file_names()
             file_names_to_fetch = [f for f in all_oem_files
-                                   if f.startswith(self.oem_date)]
+                                   if f.startswith(self.date)]
         return file_names_to_fetch
 
     def _get_gz_file_names(self,
@@ -119,22 +112,19 @@ class COSOEMData:
             for gz_file_name in gz_file_names:
                 gz_file_obj = tar_file.extractfile(gz_file_name)
                 if gz_file_obj:
-                    oem_data = self.parse_oem_data(gz_file_obj)
+                    oem_data = self._parse_oem_data(gz_file_obj)
                     aso_id = self._get_aso_id_from_file_name(gz_file_name)
                     self.oem_data[aso_id] = oem_data
-
-    def _fetch_tar_file(self, tar_file_name: str) -> IO[bytes]:
-        tar_cos_ref = self.cos_client.Object(self.cos_bucket,
-                                             tar_file_name).get()
-        tar_bytes = tar_cos_ref['Body'].read()
-        tar_file_obj = io.BytesIO(tar_bytes)
-        return tar_file_obj
 
     def get_oem_data_from_cos(self, aso_ids: Sequence[str] = [],
                               date: Optional[str] = None) -> None:
         if date:
-            self.oem_date = date
+            self.date = date
         oem_tar_file_names = self._get_file_names_to_fetch(aso_ids)
         for tar_file_name in oem_tar_file_names:
-            tar_file = self._fetch_tar_file(tar_file_name)
-            self._extract_oem_tar_file(tar_file, aso_ids)
+            tar_file = self.oem_bucket.download_fileobj(tar_file_name)
+            if tar_file:
+                self._extract_oem_tar_file(tar_file, aso_ids)
+
+    def get(self, aso_id: str) -> Optional[OEMData]:
+        return self.oem_data.get(aso_id)
