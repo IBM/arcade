@@ -1,6 +1,6 @@
 import io
 import os
-from typing import List, IO, Optional
+from typing import List, IO, Optional, Protocol
 import ibm_boto3  # type: ignore
 from ibm_botocore.client import Config  # type: ignore
 from ibm_boto3.resources.base import ServiceResource  # type: ignore
@@ -16,6 +16,14 @@ def build_cos_client() -> ServiceResource:
                                     config=Config(signature_version='oauth'),
                                     endpoint_url=cos_endpoint)
     return cos_client
+
+
+class COSBucket(Protocol):
+    def list_file_names(self) -> List[str]:
+        ...
+
+    def download_fileobj(self, file_name: str) -> Optional[IO[bytes]]:
+        ...
 
 
 class Bucket():
@@ -38,5 +46,25 @@ class Bucket():
             obj_bytes = cos_object['Body'].read()
             file_obj = io.BytesIO(obj_bytes)
             return file_obj
+        except Exception:
+            return None
+
+
+class TestBucket:
+    data_path = '/arcade/tests/test_data/oem'
+
+    def list_file_names(self) -> List[str]:
+        try:
+            return os.listdir(self.data_path)
+        except Exception:
+            return []
+
+    def download_fileobj(self, file_name: str) -> Optional[IO[bytes]]:
+        file_path = f'{self.data_path}/{file_name}'
+        try:
+            with open(file_path, 'rb') as f:
+                obj_bytes = f.read()
+                file_obj = io.BytesIO(obj_bytes)
+                return file_obj
         except Exception:
             return None

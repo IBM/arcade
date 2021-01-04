@@ -1,33 +1,12 @@
 import gzip
 import tarfile
-from dataclasses import dataclass
-from arcade.data_access.cos import Bucket
+from arcade.data_access.cos import COSBucket
+from arcade.models import EphemerisLine, OEMData
 from typing import List, Optional, Dict, Any, Sequence, IO
 
 
-@dataclass
-class EphemerisLine:
-    epoch: str
-    state_vector: Sequence[float]
-
-
-@dataclass
-class OEMData:
-    ephemeris: Sequence[EphemerisLine]
-    ccsds_oem_vers: str
-    creation_date: str
-    originator: str
-    object_name: str
-    object_id: str
-    center_name: str
-    ref_frame: str
-    time_system: str
-    start_time: str
-    stop_time: str
-
-
 class COSOEMData:
-    def __init__(self, oem_bucket: Bucket) -> None:
+    def __init__(self, oem_bucket: COSBucket) -> None:
         self.oem_bucket = oem_bucket
         self.date = self._get_latest_date()
         self.oem_data: Dict[str, OEMData] = dict()
@@ -63,7 +42,8 @@ class COSOEMData:
                     line_data = line.split(' ')
                     epoch = line_data[0]
                     state_vector = [float(s) for s in line_data[1:]]
-                    ephemeris_line = EphemerisLine(epoch, state_vector)
+                    ephemeris_line = EphemerisLine(epoch=epoch,
+                                                   state_vector=state_vector)
                     ephemeris_lines.append(ephemeris_line)
                     if epoch == raw_data['stop_time']:
                         section = 'covariance'

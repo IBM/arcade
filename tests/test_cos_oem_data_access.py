@@ -1,27 +1,6 @@
-import io
-import os
 import pytest
+from arcade.data_access.cos import TestBucket
 from arcade.data_access.cos.oem import COSOEMData
-
-
-class TestBucket:
-    data_path = 'tests/test_data/oem'
-
-    def list_file_names(self):
-        try:
-            return os.listdir(self.data_path)
-        except Exception:
-            return []
-
-    def download_fileobj(self, file_name):
-        file_path = f'{self.data_path}/{file_name}'
-        try:
-            with open(file_path, 'rb') as f:
-                obj_bytes = f.read()
-                file_obj = io.BytesIO(obj_bytes)
-                return file_obj
-        except Exception:
-            return None
 
 
 @pytest.fixture
