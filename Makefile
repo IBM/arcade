@@ -31,4 +31,11 @@ run: build
 	docker run --rm \
 	-p 8000:8000 \
 	-e DEV=true \
-	arcade uvicorn arcade.api:app --host 0.0.0.0
+	-v $(shell pwd):/arcade \
+	arcade uvicorn arcade.api:app --host 0.0.0.0 --reload
+
+jupyter: build
+	docker run --rm \
+	-p 8888:8888 \
+	-v $(shell pwd):/arcade \
+	arcade jupyter notebook --allow-root --ip 0.0.0.0
