@@ -15,6 +15,12 @@
 
 FROM python:3.8-slim-buster
 
+RUN mkdir -p /usr/share/man/man1 /usr/share/man/man2
+RUN apt-get update -qq && \
+        apt-get install -yq --no-install-suggests --no-install-recommends \
+        openjdk-11-jre \
+        git
+
 # We copy just the requirements.txt first to leverage Docker cache
 COPY ./requirements.txt /arcade/requirements.txt
 RUN chmod -R g=u /arcade
