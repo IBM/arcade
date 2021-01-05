@@ -32,7 +32,7 @@ run: build
 	-p 8000:8000 \
 	-e DEV=true \
 	-v $(shell pwd):/arcade \
-	arcade uvicorn arcade.api:app --host 0.0.0.0 --reload
+	arcade uvicorn arcade.api:app --host 0.0.0.0
 
 jupyter: build
 	docker run --rm \

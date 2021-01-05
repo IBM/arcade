@@ -1,7 +1,9 @@
 fastapi>=0.63.0
 ibm-cos-sdk>=2.9.0
+jupyter
 mypy>=0.790
 orbdetpy>=2.0.4
 pytest>=6.2.1
 pytest-flake8>=1.0.7
 uvicorn[standard]>=0.13.3
+jedi==0.17.2

@@ -6,8 +6,10 @@ import arcade.data_access.cos as cos
 import arcade.models as models
 from arcade.data_access.cos.oem import COSOEMData
 
-
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+os.environ['DEV'] = 'True'
 
 
 def build_oem_data() -> COSOEMData:
@@ -63,3 +65,9 @@ async def get_asos() -> List[models.ASO]:
 @app.get('/asos/{aso_id}')
 async def get_aso(aso_id: str) -> Optional[models.ASO]:
     return get_aso_from_oem(aso_id)
+
+
+@app.get('/ephemeris/{aso_id}')
+async def get_ephemeris(aso_id: str) -> Optional[models.OEMData]:
+    aso_oem_data = oem_dataset.get(aso_id)
+    return aso_oem_data

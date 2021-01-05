@@ -27,7 +27,7 @@ class COSOEMData:
             raw_data: Dict['str', Any] = dict()
             section = 'header'
             for raw_line in gz_file:
-                line = raw_line.decode('utf-8')
+                line = raw_line.decode('utf-8').strip()
                 # Skip blank or comment lines
                 if len(line) == 0 or line.startswith('COMMENT'):
                     continue
