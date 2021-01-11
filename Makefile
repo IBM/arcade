@@ -22,20 +22,20 @@ clean:
 	docker rmi -f arcade:latest
 
 type_check: build
-	docker run --rm arcade mypy --strict /arcade
+	docker run --rm arcade:latest mypy --strict /arcade
 
 test: build type_check
-	docker run --rm arcade python3 -m pytest --cache-clear --flake8
+	docker run --rm arcade:latest python3 -m pytest --cache-clear --flake8
 
 run: build
 	docker run --rm \
 	-p 8000:8000 \
 	-e DEV=true \
 	-v $(shell pwd):/arcade \
-	arcade uvicorn arcade.api:app --host 0.0.0.0
+	arcade:latest uvicorn arcade.api:app --host 0.0.0.0
 
 jupyter: build
 	docker run --rm \
 	-p 8888:8888 \
 	-v $(shell pwd):/arcade \
-	arcade jupyter notebook --allow-root --ip 0.0.0.0
+	arcade:latest jupyter notebook --allow-root --ip 0.0.0.0
