@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 from pydantic import BaseModel, validator
 from orbdetpy import Frame  # type: ignore
 from orbdetpy.utilities import interpolate_ephemeris  # type: ignore
@@ -6,6 +6,7 @@ from orbdetpy.conversion import get_J2000_epoch_offset  # type: ignore
 
 
 class ASO(BaseModel):
+    '''Model representing an anthropogenic space object (ASO).'''
     aso_id: str
     norad_id: str
     cospar_id: str
@@ -13,11 +14,23 @@ class ASO(BaseModel):
 
 
 class EphemerisLine(BaseModel):
+    '''A model for a single line of ephemeris data including the epoch and
+    6-dimensional state vector.'''
     epoch: str
     state_vector: List[float]
 
+    @validator('state_vector')
+    def validate_state_vect(cls, val: List[float]) -> List[float]:
+        '''Validates that the state vector has six components.'''
+        if len(val) != 6:
+            raise ValueError('State vector must be 6-dimensional')
+        else:
+            return val
+
 
 class OEMData(BaseModel):
+    '''A model representing the ephemeris data extracted from an OEM file for
+    a single ASO.'''
     ephemeris: List[EphemerisLine]
     ccsds_oem_vers: str
     creation_date: str
@@ -32,6 +45,8 @@ class OEMData(BaseModel):
 
     @validator('ref_frame')
     def validate_frame(cls, val: str) -> str:
+        '''Validates that the reference frame is one that `orbdetpy`
+        knows about.'''
         frame_map: Dict[str, str]
         frame_map = {
             'EME2000': Frame.EME2000,
@@ -47,18 +62,23 @@ class OEMData(BaseModel):
             raise ValueError('Unknown reference frame')
         return frame_map[val]
 
-    def interopolate(self, step_size: float, degree: int = 5) -> None:
+    def interopolate(self, step_size: float, num_points: int = 5) -> Any:
+        '''Interpolates the ephemeris data.
+
+        :param step_size: The interpolated step size in seconds.
+        :param num_points: The number of states to use for interpolation.
+        '''
         epochs, state_vects = [], []
         for emph_line in self.ephemeris:
             epochs.append(emph_line.epoch)
+            # Convert components from m and m\s to km and km\s
             state_vect = [i*1000.0 for i in emph_line.state_vector]
             state_vects.append(state_vect)
         offset_epochs = get_J2000_epoch_offset(epochs)
-        interpolation: None
         interpolation = interpolate_ephemeris(self.ref_frame,
                                               offset_epochs,
                                               state_vects,
-                                              degree,
+                                              num_points,
                                               self.ref_frame,
                                               offset_epochs[0],
                                               offset_epochs[-1],
