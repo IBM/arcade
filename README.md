@@ -5,7 +5,7 @@ The Advanced Research Collaboration and Application Development Environment (ARC
 
 ## Architecture and API
 
-![img](/Users/colin/projects/arcade/arcade_arch.png)
+![img](arcade_arch.png)
 
 
 ## Development
