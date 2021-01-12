@@ -22,7 +22,7 @@ def build_oem_data() -> COSOEMData:
     else:
         cos_client = cos.build_cos_client()
         oem_bucket_name = os.environ.get('COS_BUCKET', '')
-        oem_bucket = cos.Bucket(cos_client, oem_bucket_name)
+        oem_bucket = cos.IBMBucket(cos_client, oem_bucket_name)
     cos_oem_data = COSOEMData(oem_bucket)
     # Check to see if there is a file specifying the ASO IDs to fetch from
     # COS.  If no file exists then fetch all of the latest OEM data.
