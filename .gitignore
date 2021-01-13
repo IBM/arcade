@@ -139,4 +139,4 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-deploy.deploy.yaml
+deploy/deploy.yaml
