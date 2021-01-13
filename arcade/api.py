@@ -93,6 +93,8 @@ async def get_ephemeris(aso_id: str) -> Optional[models.OEMData]:
 async def get_interpolation(aso_id: str,
                             step_size: float = 60.0
                             ) -> Optional[models.OEMData]:
+    '''Interpolates the ephemeris data for given ASP based on the step
+    size (seconds).'''
     aso_oem_data = oem_dataset.get(aso_id)
     if aso_oem_data:
         interp_oem_data = aso_oem_data.interpolate(step_size=step_size)
