@@ -1,8 +1,10 @@
-from typing import List, Dict, Any
+from __future__ import annotations
+
+from typing import List, Dict
 from pydantic import BaseModel, validator
 from orbdetpy import Frame  # type: ignore
 from orbdetpy.utilities import interpolate_ephemeris  # type: ignore
-from orbdetpy.conversion import get_J2000_epoch_offset  # type: ignore
+import orbdetpy.conversion as conv  # type: ignore
 
 
 class ASO(BaseModel):
@@ -62,7 +64,7 @@ class OEMData(BaseModel):
             raise ValueError('Unknown reference frame')
         return frame_map[val]
 
-    def interopolate(self, step_size: float, num_points: int = 5) -> Any:
+    def interpolate(self, step_size: float, num_points: int = 5) -> OEMData:
         '''Interpolates the ephemeris data.
 
         :param step_size: The interpolated step size in seconds.
@@ -74,7 +76,7 @@ class OEMData(BaseModel):
             # Convert components from m and m\s to km and km\s
             state_vect = [i*1000.0 for i in emph_line.state_vector]
             state_vects.append(state_vect)
-        offset_epochs = get_J2000_epoch_offset(epochs)
+        offset_epochs = conv.get_J2000_epoch_offset(epochs)
         interpolation = interpolate_ephemeris(self.ref_frame,
                                               offset_epochs,
                                               state_vects,
@@ -83,4 +85,13 @@ class OEMData(BaseModel):
                                               offset_epochs[0],
                                               offset_epochs[-1],
                                               step_size)
-        return interpolation
+        interp_ephem_lines = []
+        for proto_buf in interpolation:
+            epoch = conv.get_UTC_string(proto_buf.time)
+            state_vector = [i/1000.0 for i in list(proto_buf.true_state)]
+            interp_ephem_line = EphemerisLine(epoch=epoch,
+                                              state_vector=state_vector)
+            interp_ephem_lines.append(interp_ephem_line)
+        interp_oem_data = self.copy()
+        interp_oem_data.ephemeris = interp_ephem_lines
+        return interp_oem_data

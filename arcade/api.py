@@ -87,3 +87,15 @@ async def get_ephemeris(aso_id: str) -> Optional[models.OEMData]:
     '''Provides the most up-to-date ephemeris data for the given ASO'''
     aso_oem_data = oem_dataset.get(aso_id)
     return aso_oem_data
+
+
+@app.get('/interpolate/{aso_id}')
+async def get_interpolation(aso_id: str,
+                            step_size: float = 60.0
+                            ) -> Optional[models.OEMData]:
+    aso_oem_data = oem_dataset.get(aso_id)
+    if aso_oem_data:
+        interp_oem_data = aso_oem_data.interpolate(step_size=step_size)
+        return interp_oem_data
+    else:
+        return None
