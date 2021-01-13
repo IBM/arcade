@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-.PHONY : build clean test type_check run
+.PHONY : build clean test type_check run push deploy
 
 build:
 	docker build -t arcade:latest .
@@ -30,12 +30,21 @@ test: build type_check
 run: build
 	docker run --rm \
 	-p 8000:8000 \
-	-e DEV=true \
+	--env-file arcade.env \
 	-v $(shell pwd):/arcade \
 	arcade:latest uvicorn arcade.api:app --host 0.0.0.0
 
 jupyter: build
 	docker run --rm \
+	-e DEV=true \
 	-p 8888:8888 \
 	-v $(shell pwd):/arcade \
 	arcade:latest jupyter notebook --allow-root --ip 0.0.0.0
+
+push: build
+	docker tag arcade:latest us.icr.io/astriagraph/arcade
+	docker push us.icr.io/astriagraph/arcade
+
+deploy: push
+	oc apply -f deploy/deploy.yaml
+	oc delete pods --selector app=arcade
