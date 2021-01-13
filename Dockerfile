@@ -30,3 +30,5 @@ RUN pip install --upgrade pip wheel
 RUN pip install -r requirements.txt
 
 COPY . /arcade
+
+CMD uvicorn arcade.api:app --host 0.0.0.0 --port 8080
