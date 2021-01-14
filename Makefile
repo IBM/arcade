@@ -46,5 +46,6 @@ push: build
 	docker push us.icr.io/astriagraph/arcade
 
 deploy: push
+	oc project arcade
 	oc apply -f deploy/deploy.yaml
 	oc delete pods --selector app=arcade
