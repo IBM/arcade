@@ -10,7 +10,7 @@ The Advanced Research Collaboration and Application Development Environment (ARC
 
 ## API
 
-Interactive documentation for the API where you can try it out in a web browser is available [here.](https://arcade.spacetech-ibm.com/docs).  The currently provided endpoints that you can programmatically test via the base URI https://arcade.spacetech-ibm.com are:
+Interactive documentation for the API where you can try it out in a web browser is available [here](https://arcade.spacetech-ibm.com/docs).  The currently provided endpoints that you can programmatically test via the base URI https://arcade.spacetech-ibm.com are:
 
 | Endpoint     | Description                                                                                                                                             |
 |------------ |------------------------------------------------------------------------------------------------------------------------------------------------------- |
