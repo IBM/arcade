@@ -26,7 +26,10 @@ class ASO(BaseModel):
     aso_id: str
     norad_id: str
     cospar_id: str
-    aso_name: str
+    name: str
+
+    class Config:
+        orm_mode = True
 
 
 class EphemerisLine(BaseModel):
@@ -44,10 +47,10 @@ class EphemerisLine(BaseModel):
             return val
 
 
-class OEMData(BaseModel):
+class OrbitEphemerisMessage(BaseModel):
     '''A model representing the ephemeris data extracted from an OEM file for
     a single ASO.'''
-    ephemeris: List[EphemerisLine]
+    ephemeris_lines: List[EphemerisLine]
     ccsds_oem_vers: str
     creation_date: str
     originator: str
@@ -58,6 +61,9 @@ class OEMData(BaseModel):
     time_system: str
     start_time: str
     stop_time: str
+
+    class Config:
+        orm_mode = True
 
     @validator('ref_frame')
     def validate_frame(cls, val: str) -> str:
@@ -78,14 +84,16 @@ class OEMData(BaseModel):
             raise ValueError('Unknown reference frame')
         return frame_map[val]
 
-    def interpolate(self, step_size: float, num_points: int = 5) -> OEMData:
-        '''Interpolates the ephemeris data.
+    def interpolate(self,
+                    step_size: float,
+                    num_points: int = 5) -> OrbitEphemerisMessage:
+        '''Interpolates the ephemeris data to the desired time step size.
 
         :param step_size: The interpolated step size in seconds.
         :param num_points: The number of states to use for interpolation.
         '''
         epochs, state_vects = [], []
-        for emph_line in self.ephemeris:
+        for emph_line in self.ephemeris_lines:
             epochs.append(emph_line.epoch)
             # Convert components from m and m\s to km and km\s
             state_vect = [i*1000.0 for i in emph_line.state_vector]
@@ -107,5 +115,5 @@ class OEMData(BaseModel):
                                               state_vector=state_vector)
             interp_ephem_lines.append(interp_ephem_line)
         interp_oem_data = self.copy()
-        interp_oem_data.ephemeris = interp_ephem_lines
+        interp_oem_data.ephemeris_lines = interp_ephem_lines
         return interp_oem_data
