@@ -45,7 +45,7 @@ class COSBucket(Protocol):
         ...
 
 
-class IBMBucket():
+class IBMBucket:
     '''A bucket abstraction around IBM's cloud object storage.'''
     def __init__(self, cos_client: ServiceResource, bucket_name: str):
         self.cos_client = cos_client
@@ -70,9 +70,13 @@ class IBMBucket():
             return None
 
 
-class TestBucket:
-    '''A test bucket that uses local data.'''
-    data_path = '/arcade/tests/test_data/oem'
+class FileSystemBucket:
+    '''A bucket that uses local file system data.'''
+
+    def __init__(self, bucket_name: str,
+                 data_path: str = '/arcade/tests/test_data/oem') -> None:
+        self.name = bucket_name
+        self.data_path = data_path
 
     def list_file_names(self) -> List[str]:
         try:
