@@ -135,3 +135,8 @@ class OrbitEphemerisMessage(BaseModel):
         interp_oem_data = self.copy()
         interp_oem_data.ephemeris_lines = interp_ephem_lines
         return interp_oem_data
+
+
+class UNCompliance(BaseModel):
+    aso_id: str
+    is_complient: bool

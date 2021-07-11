@@ -118,3 +118,22 @@ async def get_interpolation(aso_id: str,
     oem = models.OrbitEphemerisMessage.from_orm(oem_node)
     interp_oem = oem.interpolate(step_size=step_size)
     return interp_oem
+
+
+@app.get('/compliance/{aso_id}', response_model=models.UNCompliance)
+async def get_compliance(aso_id: str,
+                         user: models.User = Depends(current_active_user)
+                         ) -> Optional[models.UNCompliance]:
+    """Returns whether the ASO is compliant in registering with the United
+    Nations."""
+    aso_node = graph.SpaceObject.find(aso_id=aso_id)
+    if not aso_node:
+        return None
+    compliance_nodes = aso_node.compliance
+    if compliance_nodes:
+        compliance_node = compliance_nodes[0]
+    else:
+        return None
+    compliance = models.UNCompliance(aso_id=aso_id,
+                                     is_compliant=compliance_node.is_compliant)
+    return compliance
