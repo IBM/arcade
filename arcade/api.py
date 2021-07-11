@@ -59,18 +59,18 @@ app.include_router(
     fastapi_users.get_register_router(),
     prefix="/auth",
     tags=["auth"],
-
+    include_in_schema=False
 )
 
 current_active_user = fastapi_users.current_user(active=True)
 
 
-@app.get('/', response_class=RedirectResponse)
+@app.get('/', response_class=RedirectResponse, include_in_schema=False)
 async def redirect_to_project() -> str:
     return 'https://github.com/ibm/arcade'
 
 
-@app.get('/asos', response_model=List[models.ASO])
+@app.get('/asos', response_model=List[models.ASO], tags=['ARCADE Endpoints'])
 async def get_asos(user: models.User = Depends(current_active_user)
                    ) -> List[models.ASO]:
     """Returns information on all the anthropogenic space objects (ASOs) that
