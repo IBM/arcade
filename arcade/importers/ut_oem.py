@@ -15,12 +15,17 @@
 import os
 import re
 import gzip
+import logging
 import tarfile
 from typing import List, IO, Optional, Dict, Sequence, Union
 import neomodel  # type: ignore
 import arcade.models.cos as cos
 import arcade.models.graph as graph
 from arcade.models.cos import IBMBucket
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+logger = logging.getLogger(__name__)
+
 
 EphemerisLine = Dict[str, Union[str, List[float]]]
 OEMData = Dict[str, Union[str, List[EphemerisLine]]]
@@ -37,7 +42,12 @@ class UTOEMCOSImporter:
     def __init__(self, oem_bucket: IBMBucket) -> None:
         self.oem_bucket = oem_bucket
         self.bucket_node = self._get_bucket_node()
-        self.collection_node = graph.Collection.nodes.first(name='UT - OEM')
+        self.data_source_node = graph.DataSource.get_or_create(
+            {
+                'name': 'UT - OEM',
+                'public': True
+            }
+        )[0]
 
     def _get_bucket_node(self) -> graph.COSBucket:
         bucket_node: Optional[graph.COSBucket]
@@ -122,12 +132,15 @@ class UTOEMCOSImporter:
         id_parts = filename.split('/')
         prefix = id_parts[1]
         suffix = id_parts[-1].split('.')[0].zfill(3)
-        return prefix + suffix
+        if len(suffix) == 5:
+            return suffix
+        else:
+            return prefix + suffix
 
     def _get_aso_node(self,
                       oem_data: OEMData,
                       aso_id: str) -> graph.SpaceObject:
-        aso_node = graph.SpaceObject.find(aso_id=aso_id)
+        aso_node = graph.SpaceObject.find_one(aso_id=aso_id)
         if aso_node:
             return aso_node
         else:
@@ -149,11 +162,13 @@ class UTOEMCOSImporter:
         for old_oem in old_oems:
             if old_oem.stop_time < oem_date:
                 old_oem.delete()
+            else:
+                return None
         # Create a new OEM node
         oem_node = graph.OrbitEphemerisMessage(**oem_data)
         oem_node.save()
-        # Link the OEM node to the ASO, collection and COS object nodes
-        oem_node.from_collection.connect(self.collection_node)
+        # Link the OEM node to the ASO, data sourceand COS object nodes
+        oem_node.from_data_source.connect(self.data_source_node)
         oem_node.in_cos_object.connect(object_node)
         aso_node.ephemeris_messages.connect(oem_node)
 
@@ -161,7 +176,6 @@ class UTOEMCOSImporter:
                               tar_file_obj: IO[bytes],
                               object_node: graph.COSObject) -> None:
         """Extracts and parses the OEM data from the given tar archive file.
-        The results are stored in the instances `oem_data` attribute.
 
         :param tar_file_obj: The file object of the tar archive to extract OEM
             data out of
@@ -188,7 +202,7 @@ class UTOEMCOSImporter:
             new_object_node.bucket.connect(self.bucket_node)
             return new_object_node
 
-    def import_oem_data_from_cos(self) -> None:
+    def run(self) -> None:
         """Fetches, parses, and stores OEM data from the cloud object storage
         bucket.
         """
@@ -197,26 +211,23 @@ class UTOEMCOSImporter:
             object_node = self._get_cos_object_node(f)
             if object_node.imported:
                 continue
+            logger.info(f'Fetching tarfile {f} from COS...')
             tar_file = self.oem_bucket.download_fileobj(f)
-            if tar_file:
+            try:
+                if not tar_file:
+                    continue
+                logger.info(f'Processing tarfile {f}...')
                 self._extract_oem_tar_file(tar_file, object_node)
                 object_node.imported = True
                 object_node.save()
-
-
-def seed_graph() -> None:
-    graph.Collection.get_or_create(
-        {
-            'name': 'UT - OEM',
-            'public': True
-        }
-    )
+            except Exception as e:
+                logger.error(f'Could not process tarfile {f}, Error: {e}')
 
 
 if __name__ == '__main__':
     cos_client = cos.build_cos_client()
-    bucket = IBMBucket(cos_client, os.environ['COS_BUCKET'])
+    bucket_name = os.environ['COS_BUCKET']
+    cos_bucket = IBMBucket(cos_client, bucket_name)
     neomodel.config.DATABASE_URL = os.environ['NEO4J_BOLT_URL']
-    seed_graph()
-    importer = UTOEMCOSImporter(bucket)
-    importer.import_oem_data_from_cos()
+    importer = UTOEMCOSImporter(cos_bucket)
+    importer.run()
