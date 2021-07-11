@@ -13,40 +13,93 @@
 # limitations under the License.
 
 from __future__ import annotations
+from typing import Optional, TypeVar, Type, Dict, Union
 
-from typing import Optional, TypeVar, Type
+from aioify import aioify  # type: ignore
+
 from neomodel import (StringProperty, EmailProperty,  # type: ignore
-                      JSONProperty, BooleanProperty)
+                      JSONProperty, BooleanProperty, UniqueIdProperty)
 from neomodel import StructuredNode, RelationshipTo, RelationshipFrom
+
+from pydantic import UUID4
+from fastapi_users.models import UD
+from fastapi_users.db.base import BaseUserDatabase
+
 
 NodeType = TypeVar('NodeType', bound='StructuredNode')
 
 
 class FindMixin:
     @classmethod
-    def find(cls: Type[NodeType], **kwargs: str) -> Optional[NodeType]:
-        node: Optional[NodeType] = cls.nodes.first_or_none(**kwargs)
+    def find_one(cls: Type[NodeType], **kwargs: str) -> Optional[NodeType]:
+        node: NodeType = cls.nodes.first_or_none(**kwargs)
         return node
 
 
-class User(StructuredNode):  # type: ignore
-    email = EmailProperty(unique_index=True, required=True)
-    pwd_hash = StringProperty(required=True)
-    pwd_salt = StringProperty(required=True)
-    api_key = StringProperty(unique_index=True, required=True)
+class FastAPIUserDBAdapter(BaseUserDatabase[UD]):
+    def __init__(self, user_db_model: Type[UD]):
+        super().__init__(user_db_model)
 
-    collections = RelationshipTo('Collection', 'has_access')
+    @aioify
+    def get(self, uid: UUID4) -> Optional[UD]:
+        user = User.find_one(uid=str(uid))
+        if user:
+            return self.user_db_model(**user.to_dict())
+        else:
+            return None
+
+    @aioify
+    def get_by_email(self, email: str) -> Optional[UD]:
+        user = User.find_one(email=email)
+        if user:
+            return self.user_db_model(**user.to_dict())
+        else:
+            return None
+
+    @aioify
+    def create(self, user: UD) -> UD:
+        user_dict = user.dict()
+        user_dict['uid'] = user_dict.pop('id')
+        User(**user_dict).save()
+        return user
+
+    @aioify
+    def update(self, user: UD) -> UD:
+        user = User.create_or_update(user.dict())
+        return user
+
+    @aioify
+    def delete(self, user: UD) -> None:
+        user_node = User.find_one(uid=str(user.id))
+        if user_node:
+            user_node.delete()
+
+
+class User(StructuredNode, FindMixin):  # type: ignore
+    uid = UniqueIdProperty()
+    email = EmailProperty(unique_index=True, required=True)
+    hashed_password = StringProperty(required=True)
+    is_active = BooleanProperty()
+    is_verified = BooleanProperty()
+    is_superuser = BooleanProperty()
+
+    data_sources = RelationshipTo('DataSource', 'has_access')
 
     def post_create(self) -> None:
         self._add_public_data_sources()
 
     def _add_public_data_sources(self) -> None:
-        public_collections = Collection.nodes.filter(public=True)
-        for pc in public_collections:
-            self.collections.connect(pc)
+        public_data_sources = DataSource.nodes.filter(public=True)
+        for pds in public_data_sources:
+            self.data_sources.connect(pds)
+
+    def to_dict(self) -> Dict[str, Union[str, bool]]:
+        d = self.__dict__.copy()
+        d['id'] = d.pop('uid')
+        return d
 
 
-class Collection(StructuredNode):  # type: ignore
+class DataSource(StructuredNode):  # type: ignore
     name = StringProperty(unique_index=True, required=True)
     public = BooleanProperty()
 
@@ -66,10 +119,11 @@ class COSObject(StructuredNode):  # type: ignore
 class SpaceObject(StructuredNode, FindMixin):  # type: ignore
     aso_id = StringProperty(unique_index=True, required=True)
     norad_id = StringProperty(unique_index=True, required=True)
-    cospar_id = StringProperty(unique_index=True, required=True)
+    cospar_id = StringProperty()
     name = StringProperty()
 
     ephemeris_messages = RelationshipTo('OrbitEphemerisMessage', 'has_oem')
+    compliance = RelationshipTo('Compliance', 'has_compliance')
 
     @classmethod
     def get_latest_oem(cls, aso_id: str) -> Optional[OrbitEphemerisMessage]:
@@ -96,5 +150,11 @@ class OrbitEphemerisMessage(StructuredNode):  # type: ignore
     start_time = StringProperty()
     stop_time = StringProperty()
 
-    from_collection = RelationshipTo('Collection', 'from_collection')
+    from_data_source = RelationshipTo('DataSource', 'from_data_source')
     in_cos_object = RelationshipTo('COSObject', 'stored_in')
+
+
+class Compliance(StructuredNode):  # type: ignore
+    is_compliant = BooleanProperty(required=True)
+
+    from_data_source = RelationshipTo('DataSource', 'from_data_source')
