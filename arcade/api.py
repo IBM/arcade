@@ -65,12 +65,16 @@ app.include_router(
 current_active_user = fastapi_users.current_user(active=True)
 
 
-@app.get('/', response_class=RedirectResponse, include_in_schema=False)
+@app.get('/',
+         response_class=RedirectResponse,
+         include_in_schema=False)
 async def redirect_to_project() -> str:
     return 'https://github.com/ibm/arcade'
 
 
-@app.get('/asos', response_model=List[models.ASO], tags=['ARCADE Endpoints'])
+@app.get('/asos',
+         response_model=List[models.ASO],
+         tags=['ARCADE Endpoints'])
 async def get_asos(user: models.User = Depends(current_active_user)
                    ) -> List[models.ASO]:
     """Returns information on all the anthropogenic space objects (ASOs) that
@@ -81,7 +85,9 @@ async def get_asos(user: models.User = Depends(current_active_user)
     return asos
 
 
-@app.get('/asos/{aso_id}', response_model=models.ASO)
+@app.get('/asos/{aso_id}',
+         response_model=models.ASO,
+         tags=['ARCADE Endpoints'])
 async def get_aso(aso_id: str,
                   user: models.User = Depends(current_active_user)
                   ) -> Optional[models.ASO]:
@@ -93,7 +99,9 @@ async def get_aso(aso_id: str,
     return aso
 
 
-@app.get('/ephemeris/{aso_id}', response_model=models.OrbitEphemerisMessage)
+@app.get('/ephemeris/{aso_id}',
+         response_model=models.OrbitEphemerisMessage,
+         tags=['ARCADE Endpoints'])
 async def get_ephemeris(aso_id: str,
                         user: models.User = Depends(current_active_user)
                         ) -> Optional[models.OrbitEphemerisMessage]:
@@ -105,7 +113,9 @@ async def get_ephemeris(aso_id: str,
     return oem
 
 
-@app.get('/interpolate/{aso_id}', response_model=models.OrbitEphemerisMessage)
+@app.get('/interpolate/{aso_id}',
+         response_model=models.OrbitEphemerisMessage,
+         tags=['ARCADE Endpoints'])
 async def get_interpolation(aso_id: str,
                             step_size: float = 60.0,
                             user: models.User = Depends(current_active_user)
@@ -120,7 +130,9 @@ async def get_interpolation(aso_id: str,
     return interp_oem
 
 
-@app.get('/compliance/{aso_id}', response_model=models.UNCompliance)
+@app.get('/compliance/{aso_id}',
+         response_model=models.UNCompliance,
+         tags=['ARCADE Endpoints'])
 async def get_compliance(aso_id: str,
                          user: models.User = Depends(current_active_user)
                          ) -> Optional[models.UNCompliance]:
