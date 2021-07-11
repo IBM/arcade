@@ -13,12 +13,30 @@
 # limitations under the License.
 
 from __future__ import annotations
-
 from typing import List, Dict
-from pydantic import BaseModel, validator
+
 from orbdetpy import Frame  # type: ignore
 from orbdetpy.utilities import interpolate_ephemeris  # type: ignore
 import orbdetpy.conversion as conv  # type: ignore
+
+from pydantic import BaseModel, validator
+from fastapi_users import models as user_models
+
+
+class User(user_models.BaseUser):
+    pass
+
+
+class UserCreate(user_models.BaseUserCreate):
+    pass
+
+
+class UserUpdate(User, user_models.BaseUserUpdate):
+    pass
+
+
+class UserDB(User, user_models.BaseUserDB):
+    pass
 
 
 class ASO(BaseModel):
