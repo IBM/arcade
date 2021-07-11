@@ -18,8 +18,10 @@ from typing import Optional, TypeVar, Type, Dict, Union
 from aioify import aioify  # type: ignore
 
 from neomodel import (StringProperty, EmailProperty,  # type: ignore
-                      JSONProperty, BooleanProperty, UniqueIdProperty)
-from neomodel import StructuredNode, RelationshipTo, RelationshipFrom
+                      JSONProperty, BooleanProperty, UniqueIdProperty,
+                      DateTimeProperty)
+from neomodel import (StructuredNode, RelationshipTo, RelationshipFrom,
+                      StructuredRel)
 
 from pydantic import UUID4
 from fastapi_users.models import UD
@@ -30,6 +32,8 @@ NodeType = TypeVar('NodeType', bound='StructuredNode')
 
 
 class FindMixin:
+    """A mixin that provides convenient functions for finding instances
+    of nodes in the graph."""
     @classmethod
     def find_one(cls: Type[NodeType], **kwargs: str) -> Optional[NodeType]:
         node: NodeType = cls.nodes.first_or_none(**kwargs)
@@ -75,6 +79,16 @@ class FastAPIUserDBAdapter(BaseUserDatabase[UD]):
             user_node.delete()
 
 
+class AccessRel(StructuredRel):  # type: ignore
+    time = DateTimeProperty(default_now=True)
+    endpoint = StringProperty(required=True)
+
+
+class BaseAccess(StructuredNode):  # type: ignore
+    from_data_source = RelationshipTo('DataSource', 'from_data_source')
+    accessed_by = RelationshipFrom('User', 'accessed', model=AccessRel)
+
+
 class User(StructuredNode, FindMixin):  # type: ignore
     uid = UniqueIdProperty()
     email = EmailProperty(unique_index=True, required=True)
@@ -84,6 +98,12 @@ class User(StructuredNode, FindMixin):  # type: ignore
     is_superuser = BooleanProperty()
 
     data_sources = RelationshipTo('DataSource', 'has_access')
+    accessed_oem = RelationshipTo('OrbitEphemerisMessage',
+                                  'accessed',
+                                  model=AccessRel)
+    accessed_compliance = RelationshipTo('Compliance',
+                                         'accessed',
+                                         model=AccessRel)
 
     def post_create(self) -> None:
         self._add_public_data_sources()
@@ -97,6 +117,11 @@ class User(StructuredNode, FindMixin):  # type: ignore
         d = self.__dict__.copy()
         d['id'] = d.pop('uid')
         return d
+
+    def can_access(self, node: BaseAccess) -> bool:
+        node_source = node.from_data_source.all()[0]
+        user_sources = self.data_sources.all()
+        return node_source in user_sources
 
 
 class DataSource(StructuredNode):  # type: ignore
@@ -127,7 +152,7 @@ class SpaceObject(StructuredNode, FindMixin):  # type: ignore
 
     @classmethod
     def get_latest_oem(cls, aso_id: str) -> Optional[OrbitEphemerisMessage]:
-        aso_node = cls.find(aso_id=aso_id)
+        aso_node = cls.find_one(aso_id=aso_id)
         if aso_node is None:
             return None
         oem_node: Optional[OrbitEphemerisMessage]
@@ -150,11 +175,12 @@ class OrbitEphemerisMessage(StructuredNode):  # type: ignore
     start_time = StringProperty()
     stop_time = StringProperty()
 
-    from_data_source = RelationshipTo('DataSource', 'from_data_source')
     in_cos_object = RelationshipTo('COSObject', 'stored_in')
+    from_data_source = RelationshipTo('DataSource', 'from_data_source')
+    accessed_by = RelationshipFrom('User', 'accessed', model=AccessRel)
 
 
 class Compliance(StructuredNode):  # type: ignore
     is_compliant = BooleanProperty(required=True)
-
     from_data_source = RelationshipTo('DataSource', 'from_data_source')
+    accessed_by = RelationshipFrom('User', 'accessed', model=AccessRel)

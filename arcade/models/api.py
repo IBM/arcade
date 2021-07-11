@@ -40,7 +40,7 @@ class UserDB(User, user_models.BaseUserDB):
 
 
 class ASO(BaseModel):
-    '''Model representing an anthropogenic space object (ASO).'''
+    """A pydantic model representing an anthropogenic space object (ASO)."""
     aso_id: str
     norad_id: str
     cospar_id: str
@@ -51,14 +51,14 @@ class ASO(BaseModel):
 
 
 class EphemerisLine(BaseModel):
-    '''A model for a single line of ephemeris data including the epoch and
-    6-dimensional state vector.'''
+    """A model for a single line of ephemeris data including the epoch and
+    6-dimensional state vector."""
     epoch: str
     state_vector: List[float]
 
     @validator('state_vector')
     def validate_state_vect(cls, val: List[float]) -> List[float]:
-        '''Validates that the state vector has six components.'''
+        """Validates that the state vector has six components."""
         if len(val) != 6:
             raise ValueError('State vector must be 6-dimensional')
         else:
@@ -66,8 +66,8 @@ class EphemerisLine(BaseModel):
 
 
 class OrbitEphemerisMessage(BaseModel):
-    '''A model representing the ephemeris data extracted from an OEM file for
-    a single ASO.'''
+    """A model representing the ephemeris data extracted from an OEM file for
+    a single ASO."""
     ephemeris_lines: List[EphemerisLine]
     ccsds_oem_vers: str
     creation_date: str
@@ -85,8 +85,8 @@ class OrbitEphemerisMessage(BaseModel):
 
     @validator('ref_frame')
     def validate_frame(cls, val: str) -> str:
-        '''Validates that the reference frame is one that `orbdetpy`
-        knows about.'''
+        """Validates that the reference frame is one that `orbdetpy`
+        knows about."""
         frame_map: Dict[str, str]
         frame_map = {
             'EME2000': Frame.EME2000,
@@ -105,11 +105,11 @@ class OrbitEphemerisMessage(BaseModel):
     def interpolate(self,
                     step_size: float,
                     num_points: int = 5) -> OrbitEphemerisMessage:
-        '''Interpolates the ephemeris data to the desired time step size.
+        """Interpolates the ephemeris data to the desired time step size.
 
         :param step_size: The interpolated step size in seconds.
         :param num_points: The number of states to use for interpolation.
-        '''
+        """
         epochs, state_vects = [], []
         for emph_line in self.ephemeris_lines:
             epochs.append(emph_line.epoch)
@@ -139,4 +139,4 @@ class OrbitEphemerisMessage(BaseModel):
 
 class UNCompliance(BaseModel):
     aso_id: str
-    is_complient: bool
+    is_compliant: bool

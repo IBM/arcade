@@ -109,7 +109,11 @@ async def get_ephemeris(aso_id: str,
     oem_node = graph.SpaceObject.get_latest_oem(aso_id)
     if not oem_node:
         return None
+    user_node = graph.User.find_one(uid=str(user.id))
+    if not user_node or not user_node.can_access(oem_node):
+        return None
     oem = models.OrbitEphemerisMessage.from_orm(oem_node)
+    user_node.accessed_oem.connect(oem_node, {'endpoint': '/ephemeris'})
     return oem
 
 
@@ -125,8 +129,12 @@ async def get_interpolation(aso_id: str,
     oem_node = graph.SpaceObject.get_latest_oem(aso_id)
     if not oem_node:
         return None
+    user_node = graph.User.find_one(uid=str(user.id))
+    if not user_node or not user_node.can_access(oem_node):
+        return None
     oem = models.OrbitEphemerisMessage.from_orm(oem_node)
     interp_oem = oem.interpolate(step_size=step_size)
+    user_node.accessed_oem.connect(oem_node, {'endpoint': '/interpolate'})
     return interp_oem
 
 
@@ -138,14 +146,20 @@ async def get_compliance(aso_id: str,
                          ) -> Optional[models.UNCompliance]:
     """Returns whether the ASO is compliant in registering with the United
     Nations."""
-    aso_node = graph.SpaceObject.find(aso_id=aso_id)
+    aso_node = graph.SpaceObject.find_one(aso_id=aso_id)
     if not aso_node:
         return None
-    compliance_nodes = aso_node.compliance
+    compliance_nodes = aso_node.compliance.all()
     if compliance_nodes:
         compliance_node = compliance_nodes[0]
+        print(compliance_node)
     else:
+        return None
+    user_node = graph.User.find_one(uid=str(user.id))
+    if not user_node or not user_node.can_access(compliance_node):
         return None
     compliance = models.UNCompliance(aso_id=aso_id,
                                      is_compliant=compliance_node.is_compliant)
+    user_node.accessed_compliance.connect(compliance_node,
+                                          {'endpoint': '/compliance'})
     return compliance
