@@ -17,6 +17,7 @@ import logging
 import neomodel  # type: ignore
 from typing import List, Optional
 from fastapi import FastAPI, Depends
+from fastapi.responses import RedirectResponse
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import JWTAuthentication
 import arcade.models.graph as graph
@@ -62,6 +63,11 @@ app.include_router(
 )
 
 current_active_user = fastapi_users.current_user(active=True)
+
+
+@app.get('/', response_class=RedirectResponse)
+async def redirect_to_project() -> str:
+    return 'https://github.com/ibm/arcade'
 
 
 @app.get('/asos', response_model=List[models.ASO])
