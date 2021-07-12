@@ -69,7 +69,7 @@ current_active_user = fastapi_users.current_user(active=True)
          response_class=RedirectResponse,
          include_in_schema=False)
 async def redirect_to_project() -> str:
-    return 'https://github.com/ibm/arcade'
+    return 'https://ibm.github.io/arcade'
 
 
 @app.get('/asos',
