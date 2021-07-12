@@ -1,5 +1,6 @@
 *.DS_Store
 arcade.env
+deploy.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

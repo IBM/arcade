@@ -47,5 +47,5 @@ push: build
 
 deploy: push
 	oc project arcade
-	oc apply -f deploy/deploy.yaml
+	oc apply -f deploy.yaml
 	oc delete pods --selector app=arcade
