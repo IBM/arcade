@@ -28,7 +28,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Setup the database connection
-neomodel.config.DATABASE_URL = os.environ.get('NEO4J_BOLT_URL')
+neomodel.config.DATABASE_URL = os.environ['NEO4J_BOLT_URL']
 
 # Tell fastpai_users how to interact with user data
 user_db = graph.FastAPIUserDBAdapter(models.UserDB)
