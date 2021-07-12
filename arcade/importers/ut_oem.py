@@ -32,7 +32,7 @@ OEMData = Dict[str, Union[str, List[EphemerisLine]]]
 
 
 class UTOEMCOSImporter:
-    """An interface for fetching OEM data from UT in cloud object storage and
+    """An class for fetching OEM data from UT in cloud object storage and
     loading it into neo4j.
 
     :param oem_bucket: The cloud object storage bucket where the OEM
@@ -50,6 +50,11 @@ class UTOEMCOSImporter:
         )[0]
 
     def _get_bucket_node(self) -> graph.COSBucket:
+        """Gets or creates a neo4j node representing the COS bucket where the
+        UT OEM files are stored.
+
+        :return: The COS bucket node
+        """
         bucket_node: Optional[graph.COSBucket]
         bucket_node = graph.COSBucket.nodes.first_or_none(
             name=self.oem_bucket.name
@@ -62,6 +67,10 @@ class UTOEMCOSImporter:
             return new_bucket_node
 
     def _get_ut_files(self) -> Sequence[str]:
+        """Gets the objects in the bucket that are the UT OEM files.
+
+        :return: A list of all of the UT OEM file names.
+        """
         all_files = self.oem_bucket.list_file_names()
         ut_file_fmt = re.compile('[0-9]{8}_block_[0-9]{2}.tar')
         ut_files = [f for f in all_files if ut_file_fmt.search(f)]
@@ -140,6 +149,12 @@ class UTOEMCOSImporter:
     def _get_aso_node(self,
                       oem_data: OEMData,
                       aso_id: str) -> graph.SpaceObject:
+        """Finds or creates a SpaceObject node in the graph.
+        :param oem_data:  Data from the orbit ephemeris message that is used to
+            create a SpaceObject node if one is not found
+        :param aso_id: The ID of the ASO to find in the graph
+        :return: A SpaceObject neo4j node instance
+        """
         aso_node = graph.SpaceObject.find_one(aso_id=aso_id)
         if aso_node:
             return aso_node
@@ -155,6 +170,13 @@ class UTOEMCOSImporter:
                   oem_data: OEMData,
                   aso_id: str,
                   object_node: graph.COSObject) -> None:
+        """Saves the orbit ephemeris message in the graph.
+
+        :param oem_data: The data in the orbit ephemeris message
+        :param aso_id: The ID of the space object the OEM pertains to
+        :param object_node: The node in the graph representing the COS object
+           the OEM is stored in
+        """
         aso_node = self._get_aso_node(oem_data, aso_id)
         # Clean out old OEM messages attached to the ASO node
         oem_date = oem_data['stop_time']
@@ -167,7 +189,7 @@ class UTOEMCOSImporter:
         # Create a new OEM node
         oem_node = graph.OrbitEphemerisMessage(**oem_data)
         oem_node.save()
-        # Link the OEM node to the ASO, data sourceand COS object nodes
+        # Link the OEM node to the ASO, data source, and COS object nodes
         oem_node.from_data_source.connect(self.data_source_node)
         oem_node.in_cos_object.connect(object_node)
         aso_node.ephemeris_messages.connect(oem_node)
@@ -179,6 +201,8 @@ class UTOEMCOSImporter:
 
         :param tar_file_obj: The file object of the tar archive to extract OEM
             data out of
+       :param object_node: The node in the graph representing the COS object
+           the OEM is stored in
         """
         with tarfile.open(fileobj=tar_file_obj) as tar_file:
             gz_file_names = self._get_gz_file_names(tar_file)
@@ -190,6 +214,12 @@ class UTOEMCOSImporter:
                     self._save_oem(oem_data, aso_id, object_node)
 
     def _get_cos_object_node(self, object_name: str) -> graph.COSObject:
+        """Gets or creates the node in the graph representing the cloud object
+        storage object
+        :param object_name: The name of the COS object in the instance's OEM
+            bucket
+        :return: The ne4j COS object node instance
+        """
         object_node: Optional[graph.COSObject]
         object_node = self.bucket_node.objects \
                           .filter(name=object_name) \

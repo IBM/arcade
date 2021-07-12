@@ -5,7 +5,8 @@ The Advanced Research Collaboration and Application Development Environment (ARC
 
 ## API Accounts
 
-Accessing the ARCADE API requires an account and you can register for one by using the API like so:
+Accessing the ARCADE API requires an account and registering for one
+can be done through the API like so:
 
 ```bash
 curl -X 'POST' \
@@ -18,7 +19,7 @@ curl -X 'POST' \
 }'
 ```
 
-The ARCADE API endpoints are secured via [JSON Web Tokens (JWT)](https://jwt.io).  Once you have an account you can request a JWT via:
+The ARCADE API endpoints are secured via [JSON Web Tokens (JWT)](https://jwt.io).
 ```bash
 curl -X 'POST' \
   'https://arcade.spacetech-ibm.com/auth/jwt/login' \

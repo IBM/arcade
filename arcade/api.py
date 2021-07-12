@@ -27,11 +27,17 @@ import arcade.models.api as models
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Setup the database connection
 neomodel.config.DATABASE_URL = os.environ.get('NEO4J_BOLT_URL')
 
+# Tell fastpai_users how to interact with user data
 user_db = graph.FastAPIUserDBAdapter(models.UserDB)
 
-app = FastAPI(title='ARACADE')
+api_desc = ('The Advanced Research Collaboration and Application Development '
+            'Environment (ARCADE) provides a unified and coherent API for '
+            'accessing, analyzing, and extending a diverse set of derived '
+            'data products concerning anthropogenic space objects.')
+app = FastAPI(title='ARACADE', description=api_desc)
 
 
 jwt_authentication = JWTAuthentication(
@@ -40,6 +46,7 @@ jwt_authentication = JWTAuthentication(
     tokenUrl="auth/jwt/login"
 )
 
+# Setup fastapi_users to handle user CRUD, authentication, and authorization
 fastapi_users = FastAPIUsers(
     user_db,
     [jwt_authentication],
@@ -49,12 +56,14 @@ fastapi_users = FastAPIUsers(
     models.UserDB
 )
 
+# Add the router for users to get JWTs
 app.include_router(
     fastapi_users.get_auth_router(jwt_authentication),
     prefix="/auth/jwt",
     tags=["Authentication"]
 )
 
+# Add the router that provides the user registration endpoint
 app.include_router(
     fastapi_users.get_register_router(),
     prefix="/auth",
@@ -62,6 +71,7 @@ app.include_router(
     include_in_schema=False
 )
 
+# Helper function that gets the user based on the JWT passed to the endpoint
 current_active_user = fastapi_users.current_user(active=True)
 
 
@@ -69,6 +79,7 @@ current_active_user = fastapi_users.current_user(active=True)
          response_class=RedirectResponse,
          include_in_schema=False)
 async def redirect_to_project() -> str:
+    """Redirects the root path to the project website"""
     return 'https://ibm.github.io/arcade'
 
 
@@ -113,7 +124,7 @@ async def get_ephemeris(aso_id: str,
     if not user_node or not user_node.can_access(oem_node):
         return None
     oem = models.OrbitEphemerisMessage.from_orm(oem_node)
-    user_node.accessed_oem.connect(oem_node, {'endpoint': '/ephemeris'})
+    user_node.accessed.connect(oem_node, {'endpoint': '/ephemeris'})
     return oem
 
 
@@ -134,7 +145,7 @@ async def get_interpolation(aso_id: str,
         return None
     oem = models.OrbitEphemerisMessage.from_orm(oem_node)
     interp_oem = oem.interpolate(step_size=step_size)
-    user_node.accessed_oem.connect(oem_node, {'endpoint': '/interpolate'})
+    user_node.accessed.connect(oem_node, {'endpoint': '/interpolate'})
     return interp_oem
 
 
@@ -160,6 +171,5 @@ async def get_compliance(aso_id: str,
         return None
     compliance = models.UNCompliance(aso_id=aso_id,
                                      is_compliant=compliance_node.is_compliant)
-    user_node.accessed_compliance.connect(compliance_node,
-                                          {'endpoint': '/compliance'})
+    user_node.accessed.connect(compliance_node, {'endpoint': '/compliance'})
     return compliance

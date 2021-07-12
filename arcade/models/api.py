@@ -24,23 +24,28 @@ from fastapi_users import models as user_models
 
 
 class User(user_models.BaseUser):
+    """A `pydantic` model representing an API user."""
     pass
 
 
 class UserCreate(user_models.BaseUserCreate):
+    """A `pydantic` model representing the data needed to create a User."""
     pass
 
 
 class UserUpdate(User, user_models.BaseUserUpdate):
+    """A `pydantic` model representing the data needed to update a User."""
     pass
 
 
 class UserDB(User, user_models.BaseUserDB):
+    """A `pydantic` model representing how the user is stored in
+    the database."""
     pass
 
 
 class ASO(BaseModel):
-    """A pydantic model representing an anthropogenic space object (ASO)."""
+    """A `pydantic` model representing an anthropogenic space object (ASO)."""
     aso_id: str
     norad_id: str
     cospar_id: str
@@ -51,8 +56,8 @@ class ASO(BaseModel):
 
 
 class EphemerisLine(BaseModel):
-    """A model for a single line of ephemeris data including the epoch and
-    6-dimensional state vector."""
+    """A `pydantic` model for a single line of ephemeris data including the epoch
+    and 6-dimensional state vector."""
     epoch: str
     state_vector: List[float]
 
@@ -66,8 +71,8 @@ class EphemerisLine(BaseModel):
 
 
 class OrbitEphemerisMessage(BaseModel):
-    """A model representing the ephemeris data extracted from an OEM file for
-    a single ASO."""
+    """A `pydantic` model representing the ephemeris data extracted from an OEM
+    file for a single ASO."""
     ephemeris_lines: List[EphemerisLine]
     ccsds_oem_vers: str
     creation_date: str
@@ -138,5 +143,6 @@ class OrbitEphemerisMessage(BaseModel):
 
 
 class UNCompliance(BaseModel):
+    """A `pydantic` model representing an ASO's UN registration compliance"""
     aso_id: str
     is_compliant: bool
