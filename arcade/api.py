@@ -52,13 +52,13 @@ fastapi_users = FastAPIUsers(
 app.include_router(
     fastapi_users.get_auth_router(jwt_authentication),
     prefix="/auth/jwt",
-    tags=["auth"]
+    tags=["Authentication"]
 )
 
 app.include_router(
     fastapi_users.get_register_router(),
     prefix="/auth",
-    tags=["auth"],
+    tags=["Authentication"],
     include_in_schema=False
 )
 
