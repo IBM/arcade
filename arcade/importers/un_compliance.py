@@ -62,11 +62,11 @@ class UNComplianceImporter:
                 compliance_nodes = aso_node.compliance.all()
                 if compliance_nodes:
                     compliance_node = compliance_nodes[0]
-                    compliance_node.is_compliant = row['is_compliant']
+                    compliance_node.is_compliant = bool(row['is_compliant'])
                     compliance_node.save()
                 else:
                     compliance_node = graph.Compliance(
-                        is_compliant=row['is_compliant']
+                        is_compliant=bool(row['is_compliant'])
                     )
                     compliance_node.save()
                     aso_node.compliance.connect(compliance_node)
