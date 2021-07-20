@@ -76,6 +76,6 @@ class UNComplianceImporter:
 
 
 if __name__ == '__main__':
-    neomodel.config.DATABASE_URL = os.environ['NEO4J_BOLT_URL']
+    neomodel.config.DATABASE_URL = os.environ['NEO4J_URL']
     importer = UNComplianceImporter(os.environ['COMPLIANCE_CSV_PATH'])
     importer.run()

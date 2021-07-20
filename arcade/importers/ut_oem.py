@@ -258,6 +258,6 @@ if __name__ == '__main__':
     cos_client = cos.build_cos_client()
     bucket_name = os.environ['COS_BUCKET']
     cos_bucket = IBMBucket(cos_client, bucket_name)
-    neomodel.config.DATABASE_URL = os.environ['NEO4J_BOLT_URL']
+    neomodel.config.DATABASE_URL = os.environ['NEO4J_URL']
     importer = UTOEMCOSImporter(cos_bucket)
     importer.run()
