@@ -16,6 +16,7 @@ import os
 import logging
 import neomodel  # type: ignore
 from typing import List, Optional
+from pydantic import BaseSettings
 from fastapi import FastAPI, Depends
 from fastapi.responses import RedirectResponse
 from fastapi_users import FastAPIUsers
@@ -27,8 +28,15 @@ import arcade.models.api as models
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Setup environment settings
+class APISettings(BaseSettings):
+    neo4j_url: str
+    jwt_secret: str
+
+settings = APISettings()
+
 # Setup the database connection
-neomodel.config.DATABASE_URL = os.environ['NEO4J_BOLT_URL']
+neomodel.config.DATABASE_URL = settings.neo4j_url
 
 # Tell fastpai_users how to interact with user data
 user_db = graph.FastAPIUserDBAdapter(models.UserDB)
@@ -41,7 +49,7 @@ app = FastAPI(title='ARACADE', description=api_desc)
 
 
 jwt_authentication = JWTAuthentication(
-    secret=os.environ['JWT_SECRET'],
+    secret=settings.jwt_secret,
     lifetime_seconds=3600,
     tokenUrl="auth/jwt/login"
 )
