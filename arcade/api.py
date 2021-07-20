@@ -79,8 +79,9 @@ app.include_router(
     include_in_schema=False
 )
 
-# Helper function that gets the user based on the JWT passed to the endpoint
+# Helper functions that gets the user based on the JWT passed to the endpoint
 current_active_user = fastapi_users.current_user(active=True)
+current_super_user = fastapi_users.current_user(active=True, superuser=True)
 
 
 @app.get('/',
@@ -89,6 +90,20 @@ current_active_user = fastapi_users.current_user(active=True)
 async def redirect_to_project() -> str:
     """Redirects the root path to the project website"""
     return 'https://ibm.github.io/arcade'
+
+
+@app.get('/user_reports',
+         response_model=List[models.UserReport],
+         include_in_schema=False)
+async def get_user_reports(user: models.User = Depends(current_super_user)
+                           ) -> List[models.UserReport]:
+    """Returns summary statistics for all users"""
+    report_query = """MATCH (u:User)-[r:accessed]->()
+                      RETURN u.email AS email, count(r) AS access_count"""
+    raw_report, _ = neomodel.db.cypher_query(report_query)
+    report_rows = [models.UserReport(email=row[0], access_count=row[1])
+                   for row in raw_report]
+    return report_rows
 
 
 @app.get('/asos',

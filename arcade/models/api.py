@@ -44,6 +44,13 @@ class UserDB(User, user_models.BaseUserDB):
     pass
 
 
+class UserReport(BaseModel):
+    """A `pydantic` model representing a report of a user's usage of the
+    ARCADE API."""
+    email: str
+    access_count: int
+
+
 class ASO(BaseModel):
     """A `pydantic` model representing an anthropogenic space object (ASO)."""
     aso_id: str
