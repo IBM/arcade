@@ -103,7 +103,7 @@ async def get_aso(aso_id: str,
                   user: models.User = Depends(current_active_user)
                   ) -> Optional[models.ASO]:
     """Returns information about the ASO matching the passed ASO ID."""
-    aso_node = graph.SpaceObject.find(aso_id=aso_id)
+    aso_node = graph.SpaceObject.find_one(aso_id=aso_id)
     if not aso_node:
         return None
     aso = models.ASO.from_orm(aso_node)
