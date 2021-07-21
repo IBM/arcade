@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from __future__ import annotations
-from typing import Optional, TypeVar, Type, Dict, Union
+from collections import defaultdict
+from typing import Optional, TypeVar, Type, Dict, Union, List
 
 from aioify import aioify  # type: ignore
 
@@ -133,6 +134,10 @@ class BaseAccess(StructuredNode):  # type: ignore
     from_data_source = RelationshipTo('DataSource', 'from_data_source')
     accessed_by = RelationshipFrom('User', 'accessed', model=AccessRel)
 
+    def get_data_source_node(self) -> DataSource:
+        data_sources: List[DataSource] = self.from_data_source.all()
+        return data_sources[0]
+
 
 class User(StructuredNode, FindMixin):  # type: ignore
     """A `neomodel` model specifying how a user is stored in neo4j."""
@@ -173,7 +178,7 @@ class User(StructuredNode, FindMixin):  # type: ignore
 
         :param node: The node instance that the user wants to access
         """
-        node_source = node.from_data_source.all()[0]
+        node_source = node.get_data_source_node()
         user_sources = self.data_sources.all()
         # Checks that the data source the `node` came from is one in which the
         # user has access to
@@ -215,19 +220,27 @@ class SpaceObject(StructuredNode, FindMixin):  # type: ignore
     compliance = RelationshipTo('Compliance', 'has_compliance')
 
     @classmethod
-    def get_latest_oem(cls, aso_id: str) -> Optional[OrbitEphemerisMessage]:
-        """Gets the most recent orbit ephemeris message for an ASO
+    def get_latest_oems(cls, aso_id: str) -> List[OrbitEphemerisMessage]:
+        """Gets the most recent orbit ephemeris messages for an ASO
 
         :param aso_id: The ID of the ASO to find the most recent OEM for
         """
         aso_node = cls.find_one(aso_id=aso_id)
         if aso_node is None:
-            return None
-        oem_node: Optional[OrbitEphemerisMessage]
-        oem_node = aso_node.ephemeris_messages \
-                           .order_by('-stop_time') \
-                           .first_or_none()
-        return oem_node
+            return []
+        oems_by_source = defaultdict(list)
+        for oem in aso_node.ephemeris_messages.all():
+            source = oem.get_data_source_node()
+            oems_by_source[source.name].append(oem)
+
+        latest_oems = []
+        for source_oems in oems_by_source.values():
+            sorted_oems = sorted(source_oems,
+                                 key=lambda o: o.object_name,  # type: ignore
+                                 reverse=True)
+            latest_oems.append(sorted_oems[0])
+
+        return latest_oems
 
 
 class OrbitEphemerisMessage(BaseAccess):

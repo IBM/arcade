@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import logging
 import neomodel  # type: ignore
 from typing import List, Optional
@@ -28,10 +27,12 @@ import arcade.models.api as models
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 # Setup environment settings
 class APISettings(BaseSettings):
     neo4j_url: str
     jwt_secret: str
+
 
 settings = APISettings()
 
@@ -134,42 +135,56 @@ async def get_aso(aso_id: str,
 
 
 @app.get('/ephemeris/{aso_id}',
-         response_model=models.OrbitEphemerisMessage,
+         response_model=List[models.OrbitEphemerisMessage],
          tags=['ARCADE Endpoints'])
 async def get_ephemeris(aso_id: str,
                         user: models.User = Depends(current_active_user)
-                        ) -> Optional[models.OrbitEphemerisMessage]:
+                        ) -> List[models.OrbitEphemerisMessage]:
     """Provides the most up-to-date ephemeris data for the given ASO"""
-    oem_node = graph.SpaceObject.get_latest_oem(aso_id)
-    if not oem_node:
-        return None
+    oem_nodes = graph.SpaceObject.get_latest_oems(aso_id)
+    if not oem_nodes:
+        return []
     user_node = graph.User.find_one(uid=str(user.id))
-    if not user_node or not user_node.can_access(oem_node):
-        return None
-    oem = models.OrbitEphemerisMessage.from_orm(oem_node)
-    user_node.accessed.connect(oem_node, {'endpoint': '/ephemeris'})
-    return oem
+    if not user_node:
+        return []
+
+    oems = []
+    for oem_node in oem_nodes:
+        if not user_node.can_access(oem_node):
+            continue
+        oem = models.OrbitEphemerisMessage.from_orm(oem_node)
+        user_node.accessed.connect(oem_node, {'endpoint': '/ephemeris'})
+        oems.append(oem)
+
+    return oems
 
 
 @app.get('/interpolate/{aso_id}',
-         response_model=models.OrbitEphemerisMessage,
+         response_model=List[models.OrbitEphemerisMessage],
          tags=['ARCADE Endpoints'])
 async def get_interpolation(aso_id: str,
                             step_size: float = 60.0,
                             user: models.User = Depends(current_active_user)
-                            ) -> Optional[models.OrbitEphemerisMessage]:
+                            ) -> List[models.OrbitEphemerisMessage]:
     """Interpolates the ephemeris data for given ASP based on the step
     size (seconds)."""
-    oem_node = graph.SpaceObject.get_latest_oem(aso_id)
-    if not oem_node:
-        return None
+    oem_nodes = graph.SpaceObject.get_latest_oems(aso_id)
+    if not oem_nodes:
+        return []
     user_node = graph.User.find_one(uid=str(user.id))
-    if not user_node or not user_node.can_access(oem_node):
-        return None
-    oem = models.OrbitEphemerisMessage.from_orm(oem_node)
-    interp_oem = oem.interpolate(step_size=step_size)
-    user_node.accessed.connect(oem_node, {'endpoint': '/interpolate'})
-    return interp_oem
+    if not user_node:
+        return []
+
+    interp_oems = []
+    for oem_node in oem_nodes:
+        if not user_node.can_access(oem_node):
+            continue
+        oem = models.OrbitEphemerisMessage.from_orm(oem_node)
+        interp_oem = oem.interpolate(step_size=step_size)
+        user_node.accessed.connect(oem_node, {'endpoint': '/interpolate'})
+        interp_oems.append(interp_oem)
+
+    return interp_oems
 
 
 @app.get('/compliance/{aso_id}',

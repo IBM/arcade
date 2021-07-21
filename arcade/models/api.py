@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from orbdetpy import Frame  # type: ignore
 from orbdetpy.utilities import interpolate_ephemeris  # type: ignore
@@ -55,7 +55,7 @@ class ASO(BaseModel):
     """A `pydantic` model representing an anthropogenic space object (ASO)."""
     aso_id: str
     norad_id: str
-    cospar_id: str
+    cospar_id: Optional[str] = None
     name: str
 
     class Config:
@@ -81,11 +81,11 @@ class OrbitEphemerisMessage(BaseModel):
     """A `pydantic` model representing the ephemeris data extracted from an OEM
     file for a single ASO."""
     ephemeris_lines: List[EphemerisLine]
-    ccsds_oem_vers: str
+    ccsds_oem_vers: Optional[str] = None
     creation_date: str
     originator: str
     object_name: str
-    object_id: str
+    object_id: Optional[str] = None
     center_name: str
     ref_frame: str
     time_system: str
