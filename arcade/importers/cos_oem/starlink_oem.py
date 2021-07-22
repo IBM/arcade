@@ -18,18 +18,20 @@ import logging
 import zipfile
 from typing import List, IO, Tuple
 from datetime import datetime
-import neomodel  # type: ignore
 import arcade.models.cos as cos
 import arcade.models.graph as graph
-from arcade.importers.cos_oem import BaseOEMCOSImporter, OEMData, EphemerisLine
+from arcade.importers.cos_oem.cos_oem import (BaseOEMCOSImporter,
+                                              OEMData, EphemerisLine)
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
 
 class StarlinkOEMCOSImporter(BaseOEMCOSImporter):
-    """An class for fetching OEM data from the Starlink constellation in cloud
+    """A class for fetching OEM data from the Starlink constellation in cloud
     object storage and loading it into neo4j.
+
+    :param oem_bucket: The COS bucket where the OEM files are stored
     """
     def __init__(self, oem_bucket: cos.COSBucket) -> None:
         super().__init__(oem_bucket,
@@ -38,12 +40,24 @@ class StarlinkOEMCOSImporter(BaseOEMCOSImporter):
                          data_source_public=True)
 
     def _convert_header_time(self, time_str: str) -> str:
+        """Converts the time strings in the header of the Starlink OEM files
+        into the standard format used in the graph.
+
+        :param time_str: The time string to conver
+        :return: The normalized time string
+        """
         input_time_fmt = '%Y-%m-%d %H:%M:%S %Z'
         output_time_fmt = '%Y-%m-%dT%H:%M:%S'
         dt_obj = datetime.strptime(time_str.strip(), input_time_fmt)
         return dt_obj.strftime(output_time_fmt)
 
     def _convert_ephem_time(self, time_str: str) -> str:
+        """Converts the epoch time strings in the ephemeris lines of the
+        Starlink OEM files into the standard format used in the graph.
+
+        :param time_str: The time string to conver
+        :return: The normalized time string
+        """
         input_time_fmt = '%Y%j%H%M%S.%f'
         output_time_fmt = '%Y-%m-%dT%H:%M:%S.%f'
         dt_obj = datetime.strptime(time_str.strip(), input_time_fmt)
@@ -52,7 +66,16 @@ class StarlinkOEMCOSImporter(BaseOEMCOSImporter):
     def _parse_oem_data(self,
                         zip_file: zipfile.ZipFile,
                         oem_file_name: str) -> OEMData:
+        """Parses the OEM data in text file contained in the passed zip
+        archive.
+
+        :param zip_file: The zip archive containing the OEM text files
+        :param oem_file_name: The text file in the zip archive to parse
+
+        return: The parsed OEM data
+        """
         ephemeris_lines: List[EphemerisLine] = []
+        # Message data not contained in the OEM files
         oem_data: OEMData = {
             'originator': 'Starlink',
             'center_name': 'EARTH',
@@ -64,6 +87,7 @@ class StarlinkOEMCOSImporter(BaseOEMCOSImporter):
             for line_no, line in enumerate(oem_file):
                 if len(line.strip()) == 0:
                     break
+                # Header information is on the first 2 lines of the file
                 if line_no == 0:
                     ts = line[8:]
                     oem_data['creation_date'] = self._convert_header_time(ts)
@@ -73,6 +97,7 @@ class StarlinkOEMCOSImporter(BaseOEMCOSImporter):
                     oem_data['start_time'] = self._convert_header_time(start)
                     oem_data['stop_time'] = self._convert_header_time(stop)
                 else:
+                    # The state vectors are on every 4th line
                     if not line_no % 4 == 0:
                         continue
                     ephem_data = line.split(' ')
@@ -86,6 +111,12 @@ class StarlinkOEMCOSImporter(BaseOEMCOSImporter):
         return oem_data
 
     def _get_aso_id_name(self, file_name: str) -> Tuple[str, str]:
+        """Gets the Starlink satellite's name and NORAD ID from the text
+        file name.
+
+        :param file_name: The name of the text file containing the OEM data
+        :return: The NORAD ID and name of the satellite
+        """
         data_parts = file_name.split('_')
         aso_id = data_parts[1]
         object_name = data_parts[2]
@@ -109,12 +140,3 @@ class StarlinkOEMCOSImporter(BaseOEMCOSImporter):
                 aso_id, object_name = self._get_aso_id_name(txt_file_name)
                 oem_data['object_name'] = object_name
                 self._save_oem(oem_data, aso_id, object_node)
-
-
-if __name__ == '__main__':
-    cos_client = cos.build_cos_client()
-    bucket_name = os.environ['COS_BUCKET']
-    bucket = cos.IBMBucket(cos_client, bucket_name)
-    neomodel.config.DATABASE_URL = os.environ['NEO4J_URL']
-    importer = StarlinkOEMCOSImporter(bucket)
-    importer.run()

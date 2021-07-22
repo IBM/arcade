@@ -17,20 +17,21 @@ import gzip
 import logging
 import tarfile
 from typing import List, IO
-import neomodel  # type: ignore
 import arcade.models.cos as cos
 import arcade.models.graph as graph
-from arcade.importers.cos_oem import BaseOEMCOSImporter, OEMData, EphemerisLine
+from arcade.importers.cos_oem.cos_oem import (BaseOEMCOSImporter,
+                                              OEMData, EphemerisLine)
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
 
 class UTOEMCOSImporter(BaseOEMCOSImporter):
-    """An class for fetching OEM data from UT in cloud object storage and
+    """A class for fetching OEM data from UT in cloud object storage and
     loading it into neo4j.
-    """
 
+    :param oem_bucket: The COS bucket where the OEM files are stored
+    """
     def __init__(self, oem_bucket: cos.COSBucket) -> None:
         super().__init__(oem_bucket,
                          data_source_name='UT - OEM',
@@ -114,12 +115,3 @@ class UTOEMCOSImporter(BaseOEMCOSImporter):
                     oem_data = self._parse_oem_data(gz_file_obj)
                     aso_id = self._get_aso_id_from_file_name(gz_file_name)
                     self._save_oem(oem_data, aso_id, object_node)
-
-
-if __name__ == '__main__':
-    cos_client = cos.build_cos_client()
-    bucket_name = os.environ['COS_BUCKET']
-    bucket = cos.IBMBucket(cos_client, bucket_name)
-    neomodel.config.DATABASE_URL = os.environ['NEO4J_URL']
-    importer = UTOEMCOSImporter(bucket)
-    importer.run()

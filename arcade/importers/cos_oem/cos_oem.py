@@ -28,17 +28,28 @@ OEMData = Dict[str, Union[str, List[EphemerisLine]]]
 
 
 class BaseOEMCOSImporter:
+    """A base class for importing orbit ephemeris messages (OEM) from cloud
+    object storage (COS).
+
+    :param oem_bucket: The COS bucket where the OEM files are stored
+    :param data_source_name: The name of the data source node in the graph
+    :param oem_file_fmt: A regex for the file names that pertain to the
+       particular data source
+    :param data_source_public: Whether or not all users should have access
+        to this data source
+    """
     def __init__(self,
                  oem_bucket: cos.COSBucket,
                  data_source_name: str,
                  oem_file_fmt: str,
                  data_source_public: bool = True) -> None:
+        self.name = data_source_name
         self.oem_bucket = oem_bucket
         self.oem_file_fmt = oem_file_fmt
         self.bucket_node = self._get_bucket_node()
         self.data_source_node = graph.DataSource.get_or_create(
             {
-                'name': data_source_name,
+                'name': self.name,
                 'public': data_source_public
             }
         )[0]
@@ -61,7 +72,8 @@ class BaseOEMCOSImporter:
             return new_bucket_node
 
     def _get_files(self) -> Sequence[str]:
-        """Gets the objects in the bucket that are the OEM files.
+        """Gets the objects in the bucket that are the OEM files for this
+        particular data source.
 
         :return: A list of all of the OEM file names.
         """
@@ -143,12 +155,15 @@ class BaseOEMCOSImporter:
     def _process_fileobj(self,
                          fileobj: IO[bytes],
                          object_node: graph.COSObject) -> None:
+        """A function that subclasses need to implement that parses and stores
+        the OEM data contained in the passed `fileobj`."""
         raise NotImplementedError
 
     def run(self) -> None:
         """Fetches, parses, and stores OEM data from the cloud object storage
         bucket.
         """
+        logger.info(f'Starting import for {self.name}...')
         files = self._get_files()
         for f in files:
             object_node = self._get_cos_object_node(f)
@@ -164,4 +179,5 @@ class BaseOEMCOSImporter:
                 object_node.imported = True
                 object_node.save()
             except Exception as e:
-                logger.error(f'Could not process tarfile {f}, Error: {e}')
+                logger.error(f'Could not process file {f}, Error: {e}')
+        logger.info(f'Finished import for {self.name}...')
