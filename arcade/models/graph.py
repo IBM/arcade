@@ -191,6 +191,16 @@ class DataSource(StructuredNode):  # type: ignore
     name = StringProperty(unique_index=True, required=True)
     public = BooleanProperty()
 
+    def post_create(self) -> None:
+        """Hook that is run after a data source node is created"""
+        if self.public:
+            self._make_public()
+
+    def _make_public(self) -> None:
+        """Links the `has_access` relationship to all users in the graph"""
+        for user_node in User.nodes.all():
+            user_node.data_sources.connect(self)
+
 
 class COSBucket(StructuredNode):  # type: ignore
     """A `neomodel` model representing a cloud object storage bucket used in

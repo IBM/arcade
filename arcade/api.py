@@ -201,7 +201,6 @@ async def get_compliance(aso_id: str,
     compliance_nodes = aso_node.compliance.all()
     if compliance_nodes:
         compliance_node = compliance_nodes[0]
-        print(compliance_node)
     else:
         return None
     user_node = graph.User.find_one(uid=str(user.id))

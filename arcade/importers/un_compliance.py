@@ -14,9 +14,14 @@
 
 import os
 import csv
+import logging
 import neomodel  # type: ignore
 import pandas as pd  # type: ignore
 import arcade.models.graph as graph
+
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+logger = logging.getLogger(__name__)
 
 
 def export_compliance_data(astria_graph: neomodel.db, out_path: str) -> None:
@@ -79,4 +84,6 @@ class UNComplianceImporter:
 if __name__ == '__main__':
     neomodel.config.DATABASE_URL = os.environ['NEO4J_URL']
     importer = UNComplianceImporter(os.environ['COMPLIANCE_CSV_PATH'])
+    logger.info('Importing UN compliance data...')
     importer.run()
+    logger.info('Finished importing UN compliance data...')
