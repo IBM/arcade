@@ -45,7 +45,7 @@ In [this demo](https://astriagraph.spacetech-ibm.com) we combine [ASTRIAGraph](h
 
 ## Development and Extending the ARCADE API
 
-The ARCADE PoC is developed using Python 3.8 with the [FastAPI](https://fastapi.tiangolo.com) framework. We utilize [docker](https://www.docker.com) to develop, test, and deploy the API. The PoC API and all of the demos mentioned [above](#org1c79094) are deployed on [Red Hat's OpenShift platform](https://www.openshift.com) on [IBM Cloud](https://www.ibm.com/cloud). A [makefile](Makefile) is provided to run most of the common development tasks like:
+The ARCADE PoC is developed using Python 3.8 with the [FastAPI](https://fastapi.tiangolo.com) framework. We utilize [docker](https://www.docker.com) to develop, test, and deploy the API. The PoC API and all of the demos mentioned [above](#org8574c4a) are deployed on [Red Hat's OpenShift platform](https://www.openshift.com) on [IBM Cloud](https://www.ibm.com/cloud). A [makefile](Makefile) is provided to run most of the common development tasks like:
 
 | Command           | Description                                                                     |
 |----------------- |------------------------------------------------------------------------------- |
