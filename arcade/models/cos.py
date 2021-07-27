@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import io
 import os
-from typing import List, IO, Optional, Protocol
+from typing import List, IO, Optional
 import ibm_boto3  # type: ignore
 from ibm_botocore.client import Config  # type: ignore
 from ibm_boto3.resources.base import ServiceResource  # type: ignore
 
 
 def build_cos_client() -> ServiceResource:
-    '''Uses environment variables to build a COS client.'''
+    """Uses environment variables to build a COS client."""
     cos_endpoint = os.environ.get('COS_ENDPOINT')
     cos_api_key_id = os.environ.get('COS_API_KEY_ID')
     cos_instance_crn = os.environ.get('COS_INSTANCE_CRN')
@@ -33,22 +34,25 @@ def build_cos_client() -> ServiceResource:
     return cos_client
 
 
-class COSBucket(Protocol):
-    '''The protocol that COS buckets need to implement.'''
+class COSBucket:
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    """The protocol that COS buckets need to implement."""
     def list_file_names(self) -> List[str]:
-        '''Lists all the file names in the bucket.'''
-        ...
+        """Lists all the file names in the bucket."""
+        raise NotImplementedError
 
     def download_fileobj(self, file_name: str) -> Optional[IO[bytes]]:
-        '''Downloads the contents of the given object in the bucket.'''
-        ...
+        """Downloads the contents of the given object in the bucket."""
+        raise NotImplementedError
 
 
-class IBMBucket():
-    '''A bucket abstraction around IBM's cloud object storage.'''
+class IBMBucket(COSBucket):
+    """A bucket abstraction around IBM's cloud object storage."""
     def __init__(self, cos_client: ServiceResource, bucket_name: str):
+        super().__init__(bucket_name)
         self.cos_client = cos_client
-        self.name = bucket_name
 
     def list_file_names(self) -> List[str]:
         try:
@@ -69,9 +73,13 @@ class IBMBucket():
             return None
 
 
-class TestBucket:
-    '''A test bucket that uses local data.'''
-    data_path = '/arcade/tests/test_data/oem'
+class FileSystemBucket(COSBucket):
+    """A bucket that uses local file system data."""
+
+    def __init__(self, bucket_name: str,
+                 data_path: str = '/arcade/tests/test_data/oem') -> None:
+        super().__init__(bucket_name)
+        self.data_path = data_path
 
     def list_file_names(self) -> List[str]:
         try:

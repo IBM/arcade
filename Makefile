@@ -22,7 +22,7 @@ clean:
 	docker rmi -f arcade:latest
 
 type_check: build
-	docker run --rm arcade:latest mypy --strict /arcade
+	docker run --rm arcade:latest mypy --strict --implicit-reexport --allow-untyped-decorators /arcade
 
 test: build type_check
 	docker run --rm arcade:latest python3 -m pytest --cache-clear --flake8
@@ -47,5 +47,5 @@ push: build
 
 deploy: push
 	oc project arcade
-	oc apply -f deploy/deploy.yaml
+	oc apply -f deploy/deploy_app.yaml
 	oc delete pods --selector app=arcade
