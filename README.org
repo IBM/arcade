@@ -75,15 +75,52 @@ members to add new data sources, algorithms, and API endpoints.
 ** Adding Data
 *** Graph Database
 The ARCADE PoC utilizes the [[https://neo4j.com][neo4j]] graph database as the operational
-data store.  The current schema has the following entity-relationship diagram.
+data store.  The current schema has the following entity-relationship
+diagram.
+
 [[file:docs/arcade_graph2.png]]
+
 The =SpaceObject= node type is used to store data about an ASO that
-does frequently change like various catalog IDs and the object's
-name. 
-We use the [[https://neomodel.readthedocs.io/en/latest/][neomodel]] object graph mapper (OGM) in the [[file:arcade/models/graph.py][=graph=]]
+does not frequently change like various catalog IDs and the object's
+name. When adding new data nodes, they should be linked from the
+specific =SpaceObject= node.  The =DataSource=, =COSBucket=, and
+=COSObject= node types are used to track the provenance of imported
+data into the graph. The =User= node type is used to store information
+used in the authentication and authorization process.  The
+=has_access= relationship is used to determine if a =User= has the
+permission to access the data provided by the =DataSource=.  If a
+=DataSource= node has the =public= property set to =True= then every
+=User= node in the database will have access to all data provided by
+the =DataSource=.  The =accessed= relationship is used to keep track
+of when and through what API endpoint the =User= accessed a data node.
+We use the [[https://neomodel.readthedocs.io/en/latest/][neomodel]] object graph mapper (OGM) in the [[file:arcade/models/graph.py][=graph=]] module to
+define the properties and relationships between the various nodes in
+the graph.  Node type models that provide data for a =SpaceObject=
+from a =DataSource= should inherit from the =BaseAccess= class, which
+adds the necessary relationships for managing =User= access to the
+data.  The =FindMixin= class provides useful functions for querying
+the various node types in the graph.
 *** Data Importers
+The [[file:arcade/importers/][=importers=]] package is where scripts are kept that import data
+into the graph.  An =importer= class should implement a =run= method
+that takes no arguments.  The =run= function should be idempotent with
+regards to the state of the graph and should keep track of what data
+needs to be imported.  See the [[file:arcade/importers/cos_oem/ut_oem.py][UT OEM]], [[file:arcade/importers/cos_oem/starlink_oem.py][Starlink OEM]], and [[file:arcade/importers/un_compliance.py][UN Compliance]]
+importers as examples.
 ** Adding New Algorithms and API Models
+The [[file:arcade/models/api.py][API models]] module implements [[https://pydantic-docs.helpmanual.io][pydantic]] models that are served by
+the API.  The API models are used to validate that the data is valid
+and the model's [[https://pydantic-docs.helpmanual.io/usage/models/#orm-mode-aka-arbitrary-class-instances][Config]] is used to make turning a =graph= model into an
+=api= model seamless.  The API model is the place to implement new
+algorithms atop of existing data models.  See the =interpolate= method
+of the =OrbitEphemerisMessage= class as an example.
 ** Adding API Endpoints
+The [[https://fastapi.tiangolo.com][FastAPI]] endpoints can be found in the [[file:arcade/api.py][API]] module.  When exposing
+data from a =DataSource=, the endpoint should check that the =User=
+has the appropriate permissions using the =can_access= method on the
+=User= instance, and then add an =accessed= relationship in the graph
+containing the endpoint used.  See the =/ephemeris=, =/interpolate=,
+and =/compliance= endpoints as examples.
 * Contributing
 We very much encourage anyone and everyone to join and contribute to
 this project. Please see the [[file:///Users/colin/projects/arcade/CONTRIBUTING.md][contributing file]] for more details.

@@ -52,14 +52,24 @@ Interactive [swagger](https://swagger.io/tools/swagger-ui/) documentation for th
 
 ![img](arcade_arch.png) The ARCADE platform ingests data from multiple raw and preprocessed sources including telescopes, radar arrays, and TLE data from different providers and fuses it into a coherent view of each ASO. This data fusion is done in [ASTRIAGraph](https://sites.utexas.edu/moriba/astriagraph/) with the data being stored in the graph database or IBM's [cloud object storage (COS)](https://www.ibm.com/products/cloud-object-storage) depending on the data type. A RESTful API is then used to provide access to this rich data to developers and client applications.
 
-## Demo Client Applications
+# Demo Client Applications
 
 
-### Conjunction Search
+## Conjunction Search
 
-The [conjunction search demo](https://spaceorbits.net) of the [space situational awareness](https://github.com/ibm/spacetech-ssa) project now uses the ARCADE demo API mentioned above to gather the up-to-date ephemeris data and then determine the nearest conjunctions of each satellite.
+The [conjunction search demo](https://spaceorbits.net) of the [space situational awareness](https://github.com/ibm/spacetech-ssa) project now uses the `/ephemeris` ARCADE API endpoint to gather the up-to-date orbit state vector data and then determine the nearest conjunctions of each satellite. ![img](conj.png)
 
 
-### Observatory Light Pollution (Coming Soon)
+## Observatory Light Pollution
 
-[Daniel Kucharski](https://www.oden.utexas.edu/people/1610/) of the University of Texas has developed a [C++ library](https://github.com/danielkucharski/SatLightPollution) for determining how much light pollution a terrestrial based astronomical observatory will experience over a given time period due to ASOs passing overhead. We would like to develop a UI that utilizes this library and the ARCADE API to allow astronomers to plan their observations for time windows that will be the least impacted by ASOs.
+[Daniel Kucharski](https://www.oden.utexas.edu/people/1610/) of the University of Texas at Austin has developed a [C++ library](https://github.com/danielkucharski/SatLightPollution) for determining how much light pollution a terrestrial based astronomical observatory will experience over a given time period due to ASOs passing overhead. [This demo](https://slp.spacetech-ibm.com) utilizes ARCADE's `/interpolate` endpoint and the satellite light pollution library to show the brightness of ASOs currently above the New Mexico skys. Redder objects are brighter while bluer objects are more dim. ![img](slp.png)
+
+
+## UNOSSA Compliance
+
+In [this demo](https://astriagraph.spacetech-ibm.com) we combine [ASTRIAGraph](http://astria.tacc.utexas.edu/AstriaGraph/) and the `\compliance` ARCADE endpoint to show what ASOs are in compliance with UNOSSA's registration requirements. ![img](astriagraph.png)
+
+# Contributing
+
+We very much encourage anyone and everyone to join and contribute to this project. Please see the [contributing file](file:///Users/colin/projects/arcade/CONTRIBUTING.md) for more details.
+
