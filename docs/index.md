@@ -71,5 +71,4 @@ In [this demo](https://astriagraph.spacetech-ibm.com) we combine [ASTRIAGraph](h
 
 # Contributing
 
-We very much encourage anyone and everyone to join and contribute to this project. Please see the [contributing file](file:///Users/colin/projects/arcade/CONTRIBUTING.md) for more details.
-
+We very much encourage anyone and everyone to join and contribute to this project. Please visit the [GitHub project](https://github.com/ibm/arcade) to learn more.
