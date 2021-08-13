@@ -10,12 +10,12 @@ can be done through the API like so:
 
 ```bash
 curl -X 'POST' \
-  'http://arcade.spacetech-ibm.com/auth/register' \
+  'https://arcade.spacetech-ibm.com/auth/register' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "email": <EMAIL ADDRESS>,
-  "password": <PASSWORD>
+  "email": "<EMAIL ADDRESS>",
+  "password": "<PASSWORD>"
 }'
 ```
 
@@ -30,7 +30,7 @@ curl -X 'POST' \
 which results in the response
 ```json
 {
-  "access_token": <JSON WEB TOKEN>,
+  "access_token": "<JSON WEB TOKEN>",
   "token_type": "bearer"
 }
 ```
@@ -46,7 +46,6 @@ Interactive [swagger](https://swagger.io/tools/swagger-ui/) documentation for th
 | /ephemeris   | Provides the most up-to-date ephemeris data for an ASO                                                                                                  |
 | /interpolate | Uses UT's [`orbdetpy` library](https://github.com/ut-astria/orbdetpy) to interpolate the ephemeris data for the ASO to the specified temporal frequency |
 | /compliance  | Reports whether the ASO is compliant with the United Nation's requirements for object registration                                                      |
-
 
 ## Architecture
 
@@ -71,4 +70,4 @@ In [this demo](https://astriagraph.spacetech-ibm.com) we combine [ASTRIAGraph](h
 
 # Contributing
 
-We very much encourage anyone and everyone to join and contribute to this project. Please visit the [GitHub project](https://github.com/ibm/arcade) to learn more.
+We very much encourage anyone and everyone to join and contribute to this project. Please see the [contributing file](file:///Users/colin/projects/arcade/CONTRIBUTING.md) for more details.

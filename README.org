@@ -57,10 +57,10 @@ registration requirements.
 [[file:docs/astriagraph.png]]
 * Development and Extending the ARCADE API
 The ARCADE PoC is developed using Python 3.8 with the [[https://fastapi.tiangolo.com][FastAPI]]
-framework. We utilize [[https://www.docker.com][docker]] to develop, test, and deploy the API. The
-PoC API and all of the demos mentioned [[*Demo Client Applications][above]] are deployed on [[https://www.openshift.com][Red Hat's
-OpenShift platform]] on [[https://www.ibm.com/cloud][IBM Cloud]]. A [[file:Makefile][makefile]] is provided to run most of
-the common development tasks like:
+framework. We utilize [[https://www.docker.com][docker]] and [[https://docs.docker.com/compose/][docker-compose]] to develop, test, and
+deploy the API. The PoC API and all of the demos mentioned [[*Demo Client Applications][above]] are
+deployed on [[https://www.openshift.com][Red Hat's OpenShift platform]] on [[https://www.ibm.com/cloud][IBM Cloud]]. A [[file:Makefile][makefile]] is
+provided to run most of the common development tasks like:
 
 | Command           | Description                                   |
 |-------------------+-----------------------------------------------|
@@ -68,7 +68,7 @@ the common development tasks like:
 | =make clean=      | Removes all built docker images               |
 | =make type_check= | Uses [[https://mypy.readthedocs.io/en/stable/][mypy]] to type check the code base         |
 | =make test=       | Runs the test suite                           |
-| =make run=        | Runs the API locally at [[http://localhost:8000]] |
+| =make run=        | Runs the API locally at [[http://localhost:8080]] |
 
 The ARCADE project is meant to be extended by allowing community
 members to add new data sources, algorithms, and API endpoints.

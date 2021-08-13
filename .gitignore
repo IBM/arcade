@@ -1,6 +1,10 @@
 *.DS_Store
 arcade.env
-deploy.yaml
+deploy/deploy.yaml
+neo4j-data/neo4j-import-done.flag
+neo4j-data/databases/*
+neo4j-data/dbms/*
+neo4j-data/transactions/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

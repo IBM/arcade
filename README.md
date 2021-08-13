@@ -23,7 +23,7 @@ Interactive documentation for the API where you can try it out in a web browser 
 | /compliance  | Returns whether or not the ASO is compliant in registering with UNOSSA                                                                                  |
 
 
-<a id="org01e58d2"></a>
+<a id="orga121535"></a>
 
 # Demo Client Applications
 
@@ -45,7 +45,7 @@ In [this demo](https://astriagraph.spacetech-ibm.com) we combine [ASTRIAGraph](h
 
 # Development and Extending the ARCADE API
 
-The ARCADE PoC is developed using Python 3.8 with the [FastAPI](https://fastapi.tiangolo.com) framework. We utilize [docker](https://www.docker.com) to develop, test, and deploy the API. The PoC API and all of the demos mentioned [above](#org01e58d2) are deployed on [Red Hat's OpenShift platform](https://www.openshift.com) on [IBM Cloud](https://www.ibm.com/cloud). A [makefile](Makefile) is provided to run most of the common development tasks like:
+The ARCADE PoC is developed using Python 3.8 with the [FastAPI](https://fastapi.tiangolo.com) framework. We utilize [docker](https://www.docker.com) and [docker-compose](https://docs.docker.com/compose/) to develop, test, and deploy the API. The PoC API and all of the demos mentioned [above](#orga121535) are deployed on [Red Hat's OpenShift platform](https://www.openshift.com) on [IBM Cloud](https://www.ibm.com/cloud). A [makefile](Makefile) is provided to run most of the common development tasks like:
 
 | Command           | Description                                                                     |
 |----------------- |------------------------------------------------------------------------------- |
@@ -53,7 +53,7 @@ The ARCADE PoC is developed using Python 3.8 with the [FastAPI](https://fastapi.
 | `make clean`      | Removes all built docker images                                                 |
 | `make type_check` | Uses [mypy](https://mypy.readthedocs.io/en/stable/) to type check the code base |
 | `make test`       | Runs the test suite                                                             |
-| `make run`        | Runs the API locally at <http://localhost:8000>                                 |
+| `make run`        | Runs the API locally at <http://localhost:8080>                                 |
 
 The ARCADE project is meant to be extended by allowing community members to add new data sources, algorithms, and API endpoints.
 
