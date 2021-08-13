@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "neo4j"
+    environment:
+      - NEO4J_URL=bolt://neo4j:password@neo4j:7687
+      - JWT_SECRET=SECRET
+  neo4j:
+    image: "neo4j:4.3.3-community"
+    hostname: "neo4j"
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password
+      - NEO4J_dbms.default_database=neo4j
+      - EXTENSION_SCRIPT=/data/neo4j-init.sh
+    volumes:
+      - ./neo4j-data:/data

@@ -20,6 +20,7 @@ build:
 
 clean:
 	docker rmi -f arcade:latest
+	find . -type f -name ‘*.pyc’ -delete
 
 type_check: build
 	docker run --rm arcade:latest mypy --strict --implicit-reexport --allow-untyped-decorators /arcade
@@ -27,19 +28,7 @@ type_check: build
 test: build type_check
 	docker run --rm arcade:latest python3 -m pytest --cache-clear --flake8
 
-run: build
-	docker run --rm \
-	-p 8000:8000 \
-	--env-file arcade.env \
-	-v $(shell pwd):/arcade \
-	arcade:latest uvicorn arcade.api:app --host 0.0.0.0
-
-jupyter: build
-	docker run --rm \
-	-e DEV=true \
-	-p 8888:8888 \
-	-v $(shell pwd):/arcade \
-	arcade:latest jupyter notebook --allow-root --ip 0.0.0.0
+run: docker compose up
 
 push: build
 	docker tag arcade:latest us.icr.io/astriagraph/arcade
