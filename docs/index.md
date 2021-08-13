@@ -10,12 +10,12 @@ can be done through the API like so:
 
 ```bash
 curl -X 'POST' \
-  'http://arcade.spacetech-ibm.com/auth/register' \
+  'https://arcade.spacetech-ibm.com/auth/register' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "email": <EMAIL ADDRESS>,
-  "password": <PASSWORD>
+  "email": "<EMAIL ADDRESS>",
+  "password": "<PASSWORD>"
 }'
 ```
 
@@ -30,7 +30,7 @@ curl -X 'POST' \
 which results in the response
 ```json
 {
-  "access_token": <JSON WEB TOKEN>,
+  "access_token": "<JSON WEB TOKEN>",
   "token_type": "bearer"
 }
 ```
