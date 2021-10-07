@@ -46,7 +46,7 @@ api_desc = ('The Advanced Research Collaboration and Application Development '
             'Environment (ARCADE) provides a unified and coherent API for '
             'accessing, analyzing, and extending a diverse set of derived '
             'data products concerning anthropogenic space objects.')
-app = FastAPI(title='ARACADE', description=api_desc)
+app = FastAPI(title='ARCADE', description=api_desc)
 
 
 jwt_authentication = JWTAuthentication(
