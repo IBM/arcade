@@ -95,7 +95,7 @@ The [FastAPI](https://fastapi.tiangolo.com) endpoints can be found in the [API](
 
 # Contributing
 
-We very much encourage anyone and everyone to join and contribute to this project. Please see the [contributing file](file:///Users/colin/projects/arcade/CONTRIBUTING.md) for more details.
+We very much encourage anyone and everyone to join and contribute to this project. Please see the [contributing file](CONTRIBUTING.md) for more details.
 
 
 # License
