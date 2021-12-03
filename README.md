@@ -1,6 +1,6 @@
 # ARCADE
 
-The Advanced Research Collaboration and Application Development Environment (ARCADE) is a collaboration project between the [ASTRIA Research Group](https://sites.utexas.edu/moriba/) at the University of Texas at Austin, the IBM Space Tech team, and other partners. The goal of this repository is to provide a unified and coherent API for accessing, analyzing, and extending a diverse set of derived data points concerning an anthropogenic space object (ASO). Note: this repository currently represents a small proof of concept and is in a very alpha state of development, so APIs (internal and external) may change greatly.
+The Advanced Research Collaboration and Application Development Environment (ARCADE) is a collaboration project between the [ASTRIA Research Group](https://sites.utexas.edu/moriba/) at the University of Texas at Austin, the IBM Space Tech team, and other partners. The goal of this repository is to provide a unified and coherent API for accessing, analyzing, and extending a diverse set of derived data points concerning an anthropogenic space object (ASO). *Note: this repository currently represents a small proof of concept and is in a very alpha state of development, so APIs (internal and external) may change greatly.*
 
 
 # System Architecture
@@ -35,7 +35,7 @@ The [conjunction search demo](https://spaceorbits.net) of the [space situational
 
 ## Observatory Light Pollution
 
-[Daniel Kucharski](https://www.oden.utexas.edu/people/1610/) of the University of Texas at Austin has developed a [C++ library](https://github.com/danielkucharski/SatLightPollution) for determining how much light pollution a terrestrial based astronomical observatory will experience over a given time period due to ASOs passing overhead. [This demo](https://slp.spacetech-ibm.com) utilizes ARCADE's `/interpolate` endpoint and the satellite light pollution library to show the brightness of ASOs currently above the New Mexico skys. Redder objects are brighter while bluer objects are more dim. ![img](docs/slp.png)
+[Daniel Kucharski](https://www.oden.utexas.edu/people/1610/) of the University of Texas at Austin has developed a [C++ library](https://github.com/danielkucharski/SatLightPollution) for determining how much light pollution a terrestrial based astronomical observatory will experience over a given time period due to ASOs passing overhead. [This demo](https://slp.spacetech-ibm.com) utilizes ARCADE's `/interpolate` endpoint and the satellite light pollution library to show the brightness of ASOs currently above the New Mexico skies. Redder objects are brighter while bluer objects are dimmer. ![img](docs/slp.png)
 
 
 ## UNOSSA Compliance
@@ -67,7 +67,15 @@ The ARCADE PoC utilizes the [neo4j](https://neo4j.com) graph database as the ope
 
 ![img](docs/arcade_graph2.png)
 
-The `SpaceObject` node type is used to store data about an ASO that does not frequently change like various catalog IDs and the object's name. When adding new data nodes, they should be linked from the specific `SpaceObject` node. The `DataSource`, `COSBucket`, and `COSObject` node types are used to track the provenance of imported data into the graph. The `User` node type is used to store information used in the authentication and authorization process. The `has_access` relationship is used to determine if a `User` has the permission to access the data provided by the `DataSource`. If a `DataSource` node has the `public` property set to `True` then every `User` node in the database will have access to all data provided by the `DataSource`. The `accessed` relationship is used to keep track of when and through what API endpoint the `User` accessed a data node. We use the [neomodel](https://neomodel.readthedocs.io/en/latest/) object graph mapper (OGM) in the [`graph`](arcade/models/graph.py) module to define the properties and relationships between the various nodes in the graph. Node type models that provide data for a `SpaceObject` from a `DataSource` should inherit from the `BaseAccess` class, which adds the necessary relationships for managing `User` access to the data. The `FindMixin` class provides useful functions for querying the various node types in the graph.
+The `SpaceObject` node type is used to store data about an ASO that does not frequently change, such as various catalog IDs and the object's name. When adding new data nodes, they should be linked from the specific `SpaceObject` node.
+
+The `DataSource`, `COSBucket`, and `COSObject` node types are used to track the provenance of data imported into the graph.
+
+The `User` node type is used to store information used in the authentication and authorization process. The `has_access` relationship is used to determine if a `User` has the permission to access the data provided by the `DataSource`.
+
+If a `DataSource` node has the `public` property set to `True` then every `User` node in the database will have access to all data provided by the `DataSource`. The `accessed` relationship is used to keep track of when and through what API endpoint the `User` accessed a data node.
+
+We use the [neomodel](https://neomodel.readthedocs.io/en/latest/) object graph mapper (OGM) in the [`graph`](arcade/models/graph.py) module to define the properties and relationships between the various nodes in the graph. Node type models that provide data for a `SpaceObject` from a `DataSource` should inherit from the `BaseAccess` class, which adds the necessary relationships for managing `User` access to the data. The `FindMixin` class provides useful functions for querying the various node types in the graph.
 
 
 ### Data Importers
@@ -87,7 +95,7 @@ The [FastAPI](https://fastapi.tiangolo.com) endpoints can be found in the [API](
 
 # Contributing
 
-We very much encourage anyone and everyone to join and contribute to this project. Please see the [contributing file](file:///Users/colin/projects/arcade/CONTRIBUTING.md) for more details.
+We very much encourage anyone and everyone to join and contribute to this project. Please see the [contributing file](CONTRIBUTING.md) for more details.
 
 
 # License

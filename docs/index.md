@@ -13,11 +13,13 @@ curl -X 'POST' \
   'https://arcade.spacetech-ibm.com/auth/register' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d '{
-  "email": "<EMAIL ADDRESS>",
-  "password": "<PASSWORD>"
+  -d '{ \
+  "email": "<EMAIL ADDRESS>", \
+  "password": "<PASSWORD>" \
 }'
 ```
+
+(If you copy this into a shell script, you may need to join the lines to avoid server rejection. Likewise below.)
 
 The ARCADE API endpoints are secured via [JSON Web Tokens (JWT)](https://jwt.io).
 ```bash
